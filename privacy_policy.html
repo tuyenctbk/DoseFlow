@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - DoseFlow</title>
+    <style>
+        :root {
+            --primary: #2196F3;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border: #e2e8f0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #0f172a;
+                --surface: #1e293b;
+                --text-primary: #f8fafc;
+                --text-secondary: #cbd5e1;
+                --border: #334155;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            padding: 24px 16px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--surface);
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .effective-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        p, ul {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .contact-box {
+            background-color: var(--background);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-top: 24px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 32px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Privacy Policy for DoseFlow</h1>
+        <div class="effective-date">Last updated: August 5, 2026</div>
+
+        <p><strong>DoseFlow</strong> ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how your information is handled when you use the DoseFlow mobile application.</p>
+
+        <h2>1. Privacy-First & Local Storage</h2>
+        <p>DoseFlow is built with a strict <strong>privacy-first approach</strong>. All your personal data, medication records, dosage schedules, water intake logs, and adherence statistics are stored exclusively <strong>on your local device</strong> (using an encrypted SQLite database). We do not operate remote servers to store, collect, or process your personal health information.</p>
+
+        <h2>2. Data Collection & Usage</h2>
+        <p>We do not collect, transmit, sell, or rent any personally identifiable information (PII) or sensitive health data to third parties. Specifically:</p>
+        <ul>
+            <li><strong>Medication & Health Data:</strong> Stored 100% locally on your device. Never uploaded to external servers.</li>
+            <li><strong>Account Data:</strong> DoseFlow does not require registration, login, or user account creation.</li>
+            <li><strong>Analytics & Tracking:</strong> DoseFlow does not use third-party tracking, advertising SDKs, or invasive analytics tools.</li>
+        </ul>
+
+        <h2>3. Device Permissions</h2>
+        <p>To provide core features, DoseFlow requests minimal Android system permissions:</p>
+        <ul>
+            <li><strong>Notifications (POST_NOTIFICATIONS):</strong> Used solely to trigger scheduled medication reminders and alarm alerts locally on your device.</li>
+            <li><strong>Exact Alarms (USE_EXACT_ALARM / SCHEDULE_EXACT_ALARM):</strong> Used to ensure precise scheduling of medication reminders.</li>
+        </ul>
+
+        <h2>4. Data Backup and Export</h2>
+        <p>Because your data is stored locally, any data backups or exports (such as CSV or JSON reports) are triggered manually by you and saved to locations you select on your device.</p>
+
+        <h2>5. Children's Privacy</h2>
+        <p>DoseFlow does not knowingly collect personal information from children under the age of 13. Since no personal data is collected or transmitted by the app, parents can feel confident in local-only data storage.</p>
+
+        <h2>6. Changes to This Privacy Policy</h2>
+        <p>We may update our Privacy Policy from time to time. Any changes will be posted on this page with an updated effective date.</p>
+
+        <h2>7. Contact Us</h2>
+        <div class="contact-box">
+            <p>If you have any questions or suggestions about our Privacy Policy, please contact us at:</p>
+            <p><strong>Email:</strong> support@doseflow.app</p>
+        </div>
+
+        <footer>
+            &copy; 2026 DoseFlow. All rights reserved.
+        </footer>
+    </div>
+</body>
+</html>

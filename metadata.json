@@ -1,0 +1,6 @@
+{
+  "name": "DoseFlow",
+  "description": "Minimalist medication logger, water hydration tracker, and smartwatch tile reminder with 1-tap logging and privacy-first local storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

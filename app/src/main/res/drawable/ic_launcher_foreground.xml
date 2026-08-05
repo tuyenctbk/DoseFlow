@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Centered within 66dp bounds (21 to 87) -->
+    <!-- Pill Icon Left/Top (Violet) -->
+    <path
+        android:fillColor="#8B5CF6"
+        android:pathData="M38,36 C31,36 26,41 26,48 C26,55 31,60 38,60 L50,60 C57,60 62,55 62,48 C62,41 57,36 50,36 Z" />
+    <path
+        android:fillColor="#A78BFA"
+        android:pathData="M38,36 C31,36 26,41 26,48 C26,55 31,60 38,60 L44,60 L44,36 Z" />
+
+    <!-- Water Drop Right/Bottom (Cyan) -->
+    <path
+        android:fillColor="#06B6D4"
+        android:pathData="M68,46 C68,46 52,62 52,70 C52,79 59,86 68,86 C77,86 84,79 84,70 C84,62 68,46 68,46 Z" />
+    <!-- Water Drop Highlight -->
+    <path
+        android:fillColor="#67E8F9"
+        android:pathData="M62,68 C62,64 68,54 68,54 C68,54 70,58 70,62 C70,65 68,67 65,67 C63,67 62,69 62,68 Z" />
+</vector>
