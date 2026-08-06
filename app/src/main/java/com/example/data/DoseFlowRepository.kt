@@ -117,50 +117,17 @@ class DoseFlowRepository(private val dao: DoseFlowDao, context: Context) {
         dao.deleteWaterLog(log)
     }
 
+    suspend fun clearAllSampleData() {
+        dao.deleteAllMedications()
+        dao.deleteAllMedLogs()
+        dao.deleteAllWaterLogs()
+        prefs.edit().putBoolean(KEY_SEED_DONE, true).apply()
+    }
+
     suspend fun seedSampleDataIfEmpty() {
-        if (!prefs.getBoolean(KEY_SEED_DONE, false)) {
-            val existing = dao.getAllMedications().first()
-            if (existing.isEmpty()) {
-                dao.insertMedication(
-                    MedicationEntity(
-                        name = "Multivitamin",
-                        dosage = "1 Tablet",
-                        timeHour = 8,
-                        timeMinute = 0,
-                        stockRemaining = 28,
-                        colorHex = "#8B5CF6"
-                    )
-                )
-                dao.insertMedication(
-                    MedicationEntity(
-                        name = "Omega-3 Fish Oil",
-                        dosage = "2 Softgels",
-                        timeHour = 12,
-                        timeMinute = 30,
-                        stockRemaining = 45,
-                        colorHex = "#3B82F6"
-                    )
-                )
-                dao.insertMedication(
-                    MedicationEntity(
-                        name = "Magnesium Glycinate",
-                        dosage = "1 Capsule",
-                        timeHour = 21,
-                        timeMinute = 0,
-                        stockRemaining = 14,
-                        colorHex = "#10B981"
-                    )
-                )
-                // Add initial water log
-                dao.insertWaterLog(
-                    WaterLogEntity(
-                        amountMl = 500,
-                        timestamp = System.currentTimeMillis() - 7200000,
-                        dateString = getTodayString()
-                    )
-                )
-            }
-            prefs.edit().putBoolean(KEY_SEED_DONE, true).apply()
+        if (!prefs.getBoolean("sample_data_purged", false)) {
+            clearAllSampleData()
+            prefs.edit().putBoolean("sample_data_purged", true).apply()
         }
     }
 
