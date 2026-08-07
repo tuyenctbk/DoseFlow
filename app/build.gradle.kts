@@ -1,3 +1,4 @@
+import java.util.Properties
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 
 plugins {
@@ -18,19 +19,30 @@ android {
     applicationId = "com.soloprono.doseflow"
     minSdk = 26
     targetSdk = 36
-    versionCode = 2
-    versionName = "1.1"
+    versionCode = 8
+    versionName = "2.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      val localProperties = Properties().apply {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+          localPropertiesFile.inputStream().use { load(it) }
+        }
+      }
+      val storeFileName = localProperties.getProperty("RELEASE_STORE_FILE") ?: "common_release_key.jks"
+      storeFile = rootProject.file(storeFileName)
+      storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
+        ?: System.getenv("STORE_PASSWORD")
+        ?: "dpadhero123"
+      keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
+        ?: "dpad_hero_alias"
+      keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+        ?: System.getenv("KEY_PASSWORD")
+        ?: "dpadhero123"
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
