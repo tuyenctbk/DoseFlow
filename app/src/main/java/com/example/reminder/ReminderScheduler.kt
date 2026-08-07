@@ -53,6 +53,8 @@ object ReminderScheduler {
             putExtra(DoseFlowNotificationReceiver.EXTRA_MED_ID, medicationId)
             putExtra(DoseFlowNotificationReceiver.EXTRA_MED_NAME, medicationName)
             putExtra(DoseFlowNotificationReceiver.EXTRA_DOSAGE, dosage)
+            putExtra("extra_hour", hour)
+            putExtra("extra_minute", minute)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(

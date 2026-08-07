@@ -38,6 +38,18 @@ class DoseFlowNotificationReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_MEDICATION_REMINDER -> {
                 showNotification(context, notificationManager, medicationId, medicationName, dosage)
+                val hour = intent.getIntExtra("extra_hour", -1)
+                val minute = intent.getIntExtra("extra_minute", -1)
+                if (hour != -1 && minute != -1) {
+                    ReminderScheduler.scheduleMedicationAlarm(
+                        context = context,
+                        medicationId = medicationId,
+                        medicationName = medicationName,
+                        dosage = dosage,
+                        hour = hour,
+                        minute = minute
+                    )
+                }
             }
 
             ACTION_TAKE_NOW -> {

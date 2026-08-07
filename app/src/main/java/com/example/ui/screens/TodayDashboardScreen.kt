@@ -1,7 +1,14 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -304,19 +311,33 @@ fun TodayDashboardScreen(
                             )
                         }
 
-                        // 1-Tap Primary Action Button with Haptic Feedback
+                        var isSuccessMed by remember { mutableStateOf(false) }
+                        val coroutineScope = rememberCoroutineScope()
+                        val medScale by animateFloatAsState(if (isSuccessMed) 1.05f else 1.0f, label = "med_scale")
+                        val medColor by animateColorAsState(if (isSuccessMed) SuccessEmerald else PillViolet, label = "med_color")
+
+                        // 1-Tap Primary Action Button with Haptic Feedback and Success Animation
                         Button(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onTakePill(nextMedication)
+                                isSuccessMed = true
+                                coroutineScope.launch {
+                                    delay(400)
+                                    onTakePill(nextMedication)
+                                    isSuccessMed = false
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp)
+                                .graphicsLayer {
+                                    scaleX = medScale
+                                    scaleY = medScale
+                                }
                                 .testTag("log_dosage_now_btn"),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = PillViolet,
+                                containerColor = medColor,
                                 contentColor = OledBlack
                             )
                         ) {
@@ -328,7 +349,7 @@ fun TodayDashboardScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Log Dosage Now",
+                                    text = if (isSuccessMed) "Dosage Logged! ✓" else "Log Dosage Now",
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold
                                     )
@@ -808,6 +829,12 @@ fun WaterCounterComponent(
     onUndoWater: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
+    var isSuccessWater by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val waterScale by animateFloatAsState(if (isSuccessWater) 1.05f else 1.0f, label = "water_scale")
+    val waterColor by animateColorAsState(if (isSuccessWater) SuccessEmerald else HydrationCyan, label = "water_color")
+
     val glassesCount = waterSumMl / 250
     val targetGlasses = if (waterGoalMl > 0) waterGoalMl / 250 else 8
     val waterRatio = (waterSumMl.toFloat() / waterGoalMl.toFloat()).coerceIn(0f, 1f)
@@ -978,9 +1005,21 @@ fun WaterCounterComponent(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(44.dp)
+                                .graphicsLayer {
+                                    scaleX = waterScale
+                                    scaleY = waterScale
+                                }
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(HydrationCyan)
-                                .clickable { onLogWater(250) }
+                                .background(waterColor)
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    isSuccessWater = true
+                                    onLogWater(250)
+                                    coroutineScope.launch {
+                                        delay(800)
+                                        isSuccessWater = false
+                                    }
+                                }
                                 .testTag("counter_increment_btn"),
                             contentAlignment = Alignment.Center
                         ) {
@@ -993,7 +1032,7 @@ fun WaterCounterComponent(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "+1 Glass",
+                                    text = if (isSuccessWater) "Logged! ✓" else "+1 Glass",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Black,
                                     color = OledBlack

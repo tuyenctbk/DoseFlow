@@ -1,4 +1,3 @@
-import java.util.Properties
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 
 plugins {
@@ -19,30 +18,19 @@ android {
     applicationId = "com.soloprono.doseflow"
     minSdk = 26
     targetSdk = 36
-    versionCode = 9
-    versionName = "2.1"
+    versionCode = 2
+    versionName = "1.1"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
     create("release") {
-      val localProperties = Properties().apply {
-        val localPropertiesFile = rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-          localPropertiesFile.inputStream().use { load(it) }
-        }
-      }
-      val storeFileName = localProperties.getProperty("RELEASE_STORE_FILE") ?: "common_release_key.jks"
-      storeFile = rootProject.file(storeFileName)
-      storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
-        ?: System.getenv("STORE_PASSWORD")
-        ?: "dpadhero123"
-      keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
-        ?: "dpad_hero_alias"
-      keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
-        ?: System.getenv("KEY_PASSWORD")
-        ?: "dpadhero123"
+      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
+      storeFile = file(keystorePath)
+      storePassword = System.getenv("STORE_PASSWORD")
+      keyAlias = "upload"
+      keyPassword = System.getenv("KEY_PASSWORD")
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
@@ -108,6 +96,9 @@ dependencies {
   // implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
+  implementation(libs.androidx.wear.tiles)
+  implementation(libs.androidx.wear.protolayout)
+  implementation(libs.androidx.wear.protolayout.material)
   // implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)

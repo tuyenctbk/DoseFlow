@@ -382,6 +382,37 @@ fun SettingsScreen(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    val context = LocalContext.current
+                    Button(
+                        onClick = {
+                            val intent = android.content.Intent(android.provider.Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                                putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                                putExtra(android.provider.Settings.EXTRA_CHANNEL_ID, "doseflow_reminders")
+                            }
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                // Fallback to general app notification settings
+                                val generalIntent = android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                    putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                                }
+                                try {
+                                    context.startActivity(generalIntent)
+                                } catch (ex: Exception) {}
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().testTag("custom_notification_channels_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkSurface, contentColor = SuccessEmerald),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
+                    ) {
+                        Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = SuccessEmerald, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Customize Notification Channels (OS)", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
