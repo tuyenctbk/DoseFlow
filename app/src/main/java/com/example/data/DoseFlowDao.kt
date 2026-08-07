@@ -46,6 +46,9 @@ interface DoseFlowDao {
     @Delete
     suspend fun deleteMedLog(log: MedicationLogEntity)
 
+    @Query("DELETE FROM medication_logs WHERE id = (SELECT id FROM medication_logs WHERE dateString = :date ORDER BY timestamp DESC LIMIT 1)")
+    suspend fun undoLastMedLog(date: String)
+
     // --- Water Logs ---
     @Query("SELECT * FROM water_logs WHERE dateString = :date ORDER BY timestamp DESC")
     fun getWaterLogsForDate(date: String): Flow<List<WaterLogEntity>>
@@ -64,13 +67,4 @@ interface DoseFlowDao {
 
     @Query("DELETE FROM water_logs WHERE id = (SELECT id FROM water_logs WHERE dateString = :date ORDER BY timestamp DESC LIMIT 1)")
     suspend fun undoLastWaterLog(date: String)
-
-    @Query("DELETE FROM medications")
-    suspend fun deleteAllMedications()
-
-    @Query("DELETE FROM medication_logs")
-    suspend fun deleteAllMedLogs()
-
-    @Query("DELETE FROM water_logs")
-    suspend fun deleteAllWaterLogs()
 }

@@ -68,7 +68,7 @@ import com.example.ui.theme.TextSecondary
 fun MedicationsManagerScreen(
     medications: List<MedicationEntity>,
     waterGoalMl: Int,
-    onSaveMedication: (id: Long, name: String, dosage: String, hour: Int, min: Int, freq: String, stock: Int, color: String) -> Unit,
+    onSaveMedication: (id: Long, name: String, dosage: String, hour: Int, min: Int, freq: String, stock: Int, color: String, iconType: String) -> Unit,
     onDeleteMedication: (MedicationEntity) -> Unit,
     onSetWaterGoal: (Int) -> Unit,
     onTestNotification: (MedicationEntity) -> Unit,
@@ -292,6 +292,7 @@ fun MedicationsManagerScreen(
         var minStr by remember { mutableStateOf((editingMed?.timeMinute ?: 0).toString()) }
         var stockStr by remember { mutableStateOf((editingMed?.stockRemaining ?: 30).toString()) }
         var freq by remember { mutableStateOf(editingMed?.frequency ?: "DAILY") }
+        var selectedIcon by remember { mutableStateOf(editingMed?.iconType ?: "pill") }
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
@@ -374,6 +375,34 @@ fun MedicationsManagerScreen(
                             .fillMaxWidth()
                             .testTag("med_stock_input")
                     )
+
+                    Text("Icon Type", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val iconTypes = listOf("pill", "capsule", "syrup", "injection")
+                        iconTypes.forEach { type ->
+                            val isSelected = selectedIcon == type
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) PillViolet else DarkSurface)
+                                    .border(1.dp, if (isSelected) PillViolet else DarkCardBorder, RoundedCornerShape(8.dp))
+                                    .clickable { selectedIcon = type }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = type.replaceFirstChar { it.uppercase() },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isSelected) OledBlack else TextPrimary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -392,7 +421,8 @@ fun MedicationsManagerScreen(
                                 m,
                                 freq,
                                 s,
-                                "#8B5CF6"
+                                "#8B5CF6",
+                                selectedIcon
                             )
                             showAddDialog = false
                         }

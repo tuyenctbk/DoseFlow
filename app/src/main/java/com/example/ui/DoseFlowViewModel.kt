@@ -71,8 +71,61 @@ class DoseFlowViewModel(application: Application) : AndroidViewModel(application
     private val _waterGoalMl = MutableStateFlow(repository.getWaterGoalMl())
     val waterGoalMl: StateFlow<Int> = _waterGoalMl.asStateFlow()
 
+    private val _reminderIntervalHours = MutableStateFlow(repository.getReminderIntervalHours())
+    val reminderIntervalHours: StateFlow<Int> = _reminderIntervalHours.asStateFlow()
+
+    private val _snoozeMinutes = MutableStateFlow(repository.getSnoozeMinutes())
+    val snoozeMinutes: StateFlow<Int> = _snoozeMinutes.asStateFlow()
+
+    fun setReminderIntervalHours(hours: Int) {
+        repository.setReminderIntervalHours(hours)
+        _reminderIntervalHours.value = hours
+        viewModelScope.launch {
+            _userMessage.emit(UserMessage.Toast("⏱️ Reminder interval set to every ${hours}h"))
+        }
+    }
+
+    fun setSnoozeMinutes(minutes: Int) {
+        repository.setSnoozeMinutes(minutes)
+        _snoozeMinutes.value = minutes
+        viewModelScope.launch {
+            _userMessage.emit(UserMessage.Toast("⏰ Snooze duration set to ${minutes}m"))
+        }
+    }
+
+    fun backupDatabase() {
+        viewModelScope.launch {
+            try {
+                val path = repository.backupDatabaseToFile()
+                _userMessage.emit(UserMessage.Toast("💾 Backup saved to Documents"))
+            } catch (e: Exception) {
+                _userMessage.emit(UserMessage.Toast("❌ Backup failed: ${e.localizedMessage}"))
+            }
+        }
+    }
+
+    fun restoreDatabase(jsonString: String) {
+        viewModelScope.launch {
+            try {
+                repository.restoreDatabaseFromJsonString(jsonString)
+                _userMessage.emit(UserMessage.Toast("📂 Database restored successfully!"))
+            } catch (e: Exception) {
+                _userMessage.emit(UserMessage.Toast("❌ Restore failed: ${e.localizedMessage}"))
+            }
+        }
+    }
+
     private val _isOnboardingCompleted = MutableStateFlow(repository.isOnboardingCompleted())
     val isOnboardingCompleted: StateFlow<Boolean> = _isOnboardingCompleted.asStateFlow()
+
+    private val _isDarkTheme = MutableStateFlow(repository.isDarkThemeEnabled())
+    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
+
+    fun toggleTheme() {
+        val newMode = !_isDarkTheme.value
+        repository.setDarkThemeEnabled(newMode)
+        _isDarkTheme.value = newMode
+    }
 
     fun completeOnboarding() {
         repository.setOnboardingCompleted(true)
@@ -154,6 +207,13 @@ class DoseFlowViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun undoLastMedication() {
+        viewModelScope.launch {
+            repository.undoLastMedLog()
+            _userMessage.emit(UserMessage.Toast("↩️ Undid last medication action"))
+        }
+    }
+
     fun setWaterGoal(goalMl: Int) {
         repository.setWaterGoalMl(goalMl)
         _waterGoalMl.value = goalMl
@@ -170,7 +230,8 @@ class DoseFlowViewModel(application: Application) : AndroidViewModel(application
         timeMinute: Int,
         frequency: String,
         stock: Int,
-        colorHex: String
+        colorHex: String,
+        iconType: String = "pill"
     ) {
         viewModelScope.launch {
             val med = MedicationEntity(
@@ -181,7 +242,8 @@ class DoseFlowViewModel(application: Application) : AndroidViewModel(application
                 timeMinute = timeMinute,
                 frequency = frequency,
                 stockRemaining = stock,
-                colorHex = colorHex
+                colorHex = colorHex,
+                iconType = iconType
             )
             val insertedId = repository.insertMedication(med)
             val finalId = if (id == 0L) insertedId else id

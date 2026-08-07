@@ -16,6 +16,7 @@ data class MedicationEntity(
     val frequency: String = "DAILY", // "DAILY", "WEEKDAYS", "INTERVAL"
     val stockRemaining: Int = 30,
     val colorHex: String = "#8B5CF6",
+    val iconType: String = "pill", // "pill", "capsule", "syrup", "injection"
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis()
 )

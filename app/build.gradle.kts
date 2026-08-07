@@ -1,4 +1,3 @@
-import java.util.Properties
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 
 plugins {
@@ -8,7 +7,7 @@ plugins {
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
-  alias(libs.plugins.firebase.crashlytics)
+  // alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -17,32 +16,21 @@ android {
 
   defaultConfig {
     applicationId = "com.soloprono.doseflow"
-    minSdk = 24
+    minSdk = 26
     targetSdk = 36
-    versionCode = 6
-    versionName = "1.6"
+    versionCode = 2
+    versionName = "1.1"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
     create("release") {
-      val localProperties = Properties().apply {
-        val localPropertiesFile = rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-          localPropertiesFile.inputStream().use { load(it) }
-        }
-      }
-      val storeFileName = localProperties.getProperty("RELEASE_STORE_FILE") ?: "common_release_key.jks"
-      storeFile = rootProject.file(storeFileName)
-      storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
-        ?: System.getenv("STORE_PASSWORD")
-        ?: "dpadhero123"
-      keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
-        ?: "dpad_hero_alias"
-      keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
-        ?: System.getenv("KEY_PASSWORD")
-        ?: "dpadhero123"
+      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
+      storeFile = file(keystorePath)
+      storePassword = System.getenv("STORE_PASSWORD")
+      keyAlias = "upload"
+      keyPassword = System.getenv("KEY_PASSWORD")
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
@@ -86,8 +74,8 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
-  implementation(libs.firebase.analytics)
-  implementation(libs.firebase.crashlytics)
+  // implementation(libs.firebase.analytics)
+  // implementation(libs.firebase.crashlytics)
   // implementation(libs.accompanist.permissions)
   implementation(libs.androidx.activity.compose)
   // implementation(libs.androidx.camera.camera2)
@@ -128,6 +116,7 @@ dependencies {
   implementation(libs.okhttp)
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
+
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)

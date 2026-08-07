@@ -19,6 +19,7 @@ class DoseFlowNotificationReceiver : BroadcastReceiver() {
         const val ACTION_MEDICATION_REMINDER = "com.example.doseflow.ACTION_MEDICATION_REMINDER"
         const val ACTION_TAKE_NOW = "com.example.doseflow.ACTION_TAKE_NOW"
         const val ACTION_SNOOZE_15 = "com.example.doseflow.ACTION_SNOOZE_15"
+        const val ACTION_SNOOZE_30 = "com.example.doseflow.ACTION_SNOOZE_30"
         const val ACTION_SKIP = "com.example.doseflow.ACTION_SKIP"
 
         const val EXTRA_MED_ID = "extra_med_id"
@@ -56,6 +57,22 @@ class DoseFlowNotificationReceiver : BroadcastReceiver() {
                     medicationName = medicationName,
                     dosage = dosage,
                     snoozeMinutes = 15
+                )
+                CoroutineScope(Dispatchers.IO).launch {
+                    val db = AppDatabase.getDatabase(context)
+                    val repo = DoseFlowRepository(db.doseFlowDao(), context)
+                    repo.logMedicationAction(medicationId, medicationName, dosage, "SNOOZED")
+                }
+            }
+
+            ACTION_SNOOZE_30 -> {
+                notificationManager.cancel(medicationId.toInt())
+                ReminderScheduler.snoozeMedicationAlarm(
+                    context = context,
+                    medicationId = medicationId,
+                    medicationName = medicationName,
+                    dosage = dosage,
+                    snoozeMinutes = 30
                 )
                 CoroutineScope(Dispatchers.IO).launch {
                     val db = AppDatabase.getDatabase(context)
@@ -109,17 +126,31 @@ class DoseFlowNotificationReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Action Snooze
-        val snoozeIntent = Intent(context, DoseFlowNotificationReceiver::class.java).apply {
+        // Action Snooze 15m
+        val snooze15Intent = Intent(context, DoseFlowNotificationReceiver::class.java).apply {
             action = ACTION_SNOOZE_15
             putExtra(EXTRA_MED_ID, medicationId)
             putExtra(EXTRA_MED_NAME, medicationName)
             putExtra(EXTRA_DOSAGE, dosage)
         }
-        val snoozePendingIntent = PendingIntent.getBroadcast(
+        val snooze15PendingIntent = PendingIntent.getBroadcast(
             context,
             (medicationId * 10 + 2).toInt(),
-            snoozeIntent,
+            snooze15Intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Action Snooze 30m
+        val snooze30Intent = Intent(context, DoseFlowNotificationReceiver::class.java).apply {
+            action = ACTION_SNOOZE_30
+            putExtra(EXTRA_MED_ID, medicationId)
+            putExtra(EXTRA_MED_NAME, medicationName)
+            putExtra(EXTRA_DOSAGE, dosage)
+        }
+        val snooze30PendingIntent = PendingIntent.getBroadcast(
+            context,
+            (medicationId * 10 + 4).toInt(),
+            snooze30Intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -145,8 +176,9 @@ class DoseFlowNotificationReceiver : BroadcastReceiver() {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
             .setContentIntent(openAppPendingIntent)
-            .addAction(0, "✅ Take Now", takePendingIntent)
-            .addAction(0, "⏰ Snooze 15m", snoozePendingIntent)
+            .addAction(0, "✅ Take", takePendingIntent)
+            .addAction(0, "⏰ 15m", snooze15PendingIntent)
+            .addAction(0, "⏰ 30m", snooze30PendingIntent)
             .addAction(0, "🚫 Skip", skipPendingIntent)
 
         notificationManager.notify(medicationId.toInt(), builder.build())

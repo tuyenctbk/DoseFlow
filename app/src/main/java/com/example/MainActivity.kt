@@ -50,7 +50,14 @@ import com.example.ui.DoseFlowViewModel
 import com.example.ui.UserMessage
 import com.example.ui.screens.HistoryAndExportScreen
 import com.example.ui.screens.MedicationsManagerScreen
+import com.example.ui.screens.ReportScreen
+import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.TodayDashboardScreen
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import com.example.ui.theme.DarkCardBorder
 import com.example.ui.theme.HydrationCyan
 import com.example.ui.theme.MyApplicationTheme
@@ -59,24 +66,25 @@ import com.example.ui.theme.PillViolet
 import com.example.ui.theme.SuccessEmerald
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextSecondary
-import com.google.firebase.analytics.FirebaseAnalytics
+import com.example.ui.theme.WarningAmber
+
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var firebaseAnalytics: FirebaseAnalytics
+
     private val viewModel: DoseFlowViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        firebaseAnalytics = FirebaseAnalytics.getInstance(this)
 
         // Create Notification Channel for alarms
         ReminderScheduler.createNotificationChannel(this)
 
         setContent {
-            MyApplicationTheme {
+            val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle()
+            MyApplicationTheme(darkTheme = isDarkTheme) {
                 val medications by viewModel.medications.collectAsStateWithLifecycle()
                 val todayMedLogs by viewModel.todayMedLogs.collectAsStateWithLifecycle()
                 val todayWaterLogs by viewModel.todayWaterLogs.collectAsStateWithLifecycle()
@@ -86,6 +94,8 @@ class MainActivity : ComponentActivity() {
                 val allMedLogs by viewModel.allMedLogs.collectAsStateWithLifecycle()
                 val allWaterLogs by viewModel.allWaterLogs.collectAsStateWithLifecycle()
                 val csvString by viewModel.csvString.collectAsStateWithLifecycle()
+                val reminderIntervalHours by viewModel.reminderIntervalHours.collectAsStateWithLifecycle()
+                val snoozeMinutes by viewModel.snoozeMinutes.collectAsStateWithLifecycle()
 
                 val isOnboardingCompleted by viewModel.isOnboardingCompleted.collectAsStateWithLifecycle()
 
@@ -106,18 +116,18 @@ class MainActivity : ComponentActivity() {
                         onCompleteOnboarding = { viewModel.completeOnboarding() }
                     )
                 } else {
+                    val snackbarHostState = remember { SnackbarHostState() }
+                    val scope = rememberCoroutineScope()
+
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         containerColor = OledBlack,
+                        snackbarHost = { SnackbarHost(snackbarHostState) },
                         bottomBar = {
                             GeometricBottomNavigation(
                                 selectedTab = selectedTab,
                                 onTabSelected = { 
                                     selectedTab = it 
-                                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, Bundle().apply {
-                                        putString(FirebaseAnalytics.Param.SCREEN_NAME, "tab_$it")
-                                        putString(FirebaseAnalytics.Param.SCREEN_CLASS, "MainActivity")
-                                    })
                                 }
                             )
                         }
@@ -131,32 +141,51 @@ class MainActivity : ComponentActivity() {
                                 0 -> TodayDashboardScreen(
                                     medications = medications,
                                     todayMedLogs = todayMedLogs,
+                                    allMedLogs = allMedLogs,
+                                    allWaterLogs = allWaterLogs,
                                     waterSumMl = todayWaterSum,
                                     waterGoalMl = waterGoalMl,
                                     completionPercent = completionPercent,
+                                    isDarkTheme = isDarkTheme,
+                                    onToggleTheme = { viewModel.toggleTheme() },
                                     onTakePill = { med -> 
                                         viewModel.logMedicationAction(med, "TAKEN")
-                                        firebaseAnalytics.logEvent("medication_taken", Bundle().apply {
-                                            putString("med_name", med.name)
-                                        })
+                                        scope.launch {
+                                            val result = snackbarHostState.showSnackbar(
+                                                message = "Logged: ${med.name} taken",
+                                                actionLabel = "UNDO"
+                                            )
+                                            if (result == SnackbarResult.ActionPerformed) {
+                                                viewModel.undoLastMedication()
+                                            }
+                                        }
                                     },
                                     onSnoozePill = { med -> 
                                         viewModel.logMedicationAction(med, "SNOOZED") 
-                                        firebaseAnalytics.logEvent("medication_snoozed", Bundle().apply {
-                                            putString("med_name", med.name)
-                                        })
                                     },
                                     onSkipPill = { med -> 
                                         viewModel.logMedicationAction(med, "SKIPPED") 
-                                        firebaseAnalytics.logEvent("medication_skipped", Bundle().apply {
-                                            putString("med_name", med.name)
-                                        })
+                                        scope.launch {
+                                            val result = snackbarHostState.showSnackbar(
+                                                message = "Skipped ${med.name}",
+                                                actionLabel = "UNDO"
+                                            )
+                                            if (result == SnackbarResult.ActionPerformed) {
+                                                viewModel.undoLastMedication()
+                                            }
+                                        }
                                     },
                                     onLogWater = { amount -> 
                                         viewModel.logWater(amount) 
-                                        firebaseAnalytics.logEvent("water_logged", Bundle().apply {
-                                            putInt("amount_ml", amount)
-                                        })
+                                        scope.launch {
+                                            val result = snackbarHostState.showSnackbar(
+                                                message = "+${amount}ml water logged",
+                                                actionLabel = "UNDO"
+                                            )
+                                            if (result == SnackbarResult.ActionPerformed) {
+                                                viewModel.undoLastWater()
+                                            }
+                                        }
                                     },
                                     onUndoWater = { viewModel.undoLastWater() },
                                     onOpenAddMedication = { selectedTab = 1 },
@@ -166,27 +195,42 @@ class MainActivity : ComponentActivity() {
                                 1 -> MedicationsManagerScreen(
                                     medications = medications,
                                     waterGoalMl = waterGoalMl,
-                                    onSaveMedication = { id, name, dosage, hour, min, freq, stock, color ->
-                                        viewModel.saveMedication(id, name, dosage, hour, min, freq, stock, color)
-                                        firebaseAnalytics.logEvent("medication_saved", Bundle().apply {
-                                            putString("med_name", name)
-                                            putString("frequency", freq)
-                                        })
+                                    onSaveMedication = { id, name, dosage, hour, min, freq, stock, color, iconType ->
+                                        viewModel.saveMedication(id, name, dosage, hour, min, freq, stock, color, iconType)
                                     },
                                     onDeleteMedication = { med -> viewModel.deleteMedication(med) },
                                     onSetWaterGoal = { goal -> viewModel.setWaterGoal(goal) },
                                     onTestNotification = { med -> viewModel.testSendReminderNotification(med) }
                                 )
 
-                                2 -> HistoryAndExportScreen(
+                                2 -> ReportScreen(
+                                    allMedLogs = allMedLogs,
+                                    allWaterLogs = allWaterLogs,
+                                    waterGoalMl = waterGoalMl
+                                )
+
+                                3 -> HistoryAndExportScreen(
                                     allMedLogs = allMedLogs,
                                     allWaterLogs = allWaterLogs,
                                     csvString = csvString,
                                     onGenerateCsv = { 
                                         viewModel.exportCsv() 
-                                        firebaseAnalytics.logEvent("csv_exported", null)
                                     },
                                     onClearCsv = { viewModel.clearCsv() },
+                                    onRevisitOnboarding = { viewModel.resetOnboarding() }
+                                )
+
+                                4 -> SettingsScreen(
+                                    waterGoalMl = waterGoalMl,
+                                    onSetWaterGoal = { viewModel.setWaterGoal(it) },
+                                    reminderIntervalHours = reminderIntervalHours,
+                                    onSetReminderInterval = { viewModel.setReminderIntervalHours(it) },
+                                    snoozeMinutes = snoozeMinutes,
+                                    onSetSnoozeMinutes = { viewModel.setSnoozeMinutes(it) },
+                                    isDarkTheme = isDarkTheme,
+                                    onToggleTheme = { viewModel.toggleTheme() },
+                                    onBackupDatabase = { viewModel.backupDatabase() },
+                                    onRestoreDatabase = { json -> viewModel.restoreDatabase(json) },
                                     onRevisitOnboarding = { viewModel.resetOnboarding() }
                                 )
                             }
@@ -237,14 +281,34 @@ fun GeometricBottomNavigation(
                 testTag = "tab_schedules"
             )
 
-            // Tab 2: History & Export
+            // Tab 2: Report
             NavItem(
-                iconText = "H",
-                label = "History",
+                iconText = "R",
+                label = "Report",
                 isSelected = selectedTab == 2,
                 activeColor = HydrationCyan,
                 onClick = { onTabSelected(2) },
+                testTag = "tab_report"
+            )
+
+            // Tab 3: History & Export
+            NavItem(
+                iconText = "H",
+                label = "History",
+                isSelected = selectedTab == 3,
+                activeColor = SuccessEmerald,
+                onClick = { onTabSelected(3) },
                 testTag = "tab_history"
+            )
+
+            // Tab 4: Settings
+            NavItem(
+                iconText = "G",
+                label = "Settings",
+                isSelected = selectedTab == 4,
+                activeColor = WarningAmber,
+                onClick = { onTabSelected(4) },
+                testTag = "tab_settings"
             )
         }
     }

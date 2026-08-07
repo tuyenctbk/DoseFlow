@@ -23,14 +23,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Snooze
-import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -38,16 +41,20 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +62,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.MedicationEntity
 import com.example.data.MedicationLogEntity
-import com.example.ui.components.WearOsTileSimulator
+import com.example.data.WaterLogEntity
+
 import com.example.ui.theme.DarkCard
 import com.example.ui.theme.DarkCardBorder
 import com.example.ui.theme.DarkSurface
@@ -75,9 +83,13 @@ import java.util.Locale
 fun TodayDashboardScreen(
     medications: List<MedicationEntity>,
     todayMedLogs: List<MedicationLogEntity>,
+    allMedLogs: List<MedicationLogEntity>,
+    allWaterLogs: List<WaterLogEntity>,
     waterSumMl: Int,
     waterGoalMl: Int,
     completionPercent: Int,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit,
     onTakePill: (MedicationEntity) -> Unit,
     onSnoozePill: (MedicationEntity) -> Unit,
     onSkipPill: (MedicationEntity) -> Unit,
@@ -87,12 +99,15 @@ fun TodayDashboardScreen(
     onTestNotification: (MedicationEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     val dateFormatted = SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date())
 
-    // Identify next pending medication
+    // Identify active and pending medications
+    val activeMeds = medications.filter { it.isActive }
     val loggedIds = todayMedLogs.map { it.medicationId }
-    val pendingMeds = medications.filter { it.id !in loggedIds && it.isActive }
+    val pendingMeds = activeMeds.filter { it.id !in loggedIds }
     val nextMedication = pendingMeds.firstOrNull()
+    val takenCount = todayMedLogs.count { it.status == "TAKEN" }
 
     LazyColumn(
         modifier = modifier
@@ -128,37 +143,65 @@ fun TodayDashboardScreen(
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(DarkSurface)
-                        .border(1.dp, DarkCardBorder, CircleShape)
-                        .clickable { onOpenAddMedication() }
-                        .testTag("add_medication_header_btn"),
-                    contentAlignment = Alignment.Center
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Medication",
-                        tint = PillViolet
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(DarkSurface)
+                            .border(1.dp, DarkCardBorder, CircleShape)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onToggleTheme()
+                            }
+                            .testTag("theme_toggle_header_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = "Toggle Theme",
+                            tint = WarningAmber
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(DarkSurface)
+                            .border(1.dp, DarkCardBorder, CircleShape)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onOpenAddMedication()
+                            }
+                            .testTag("add_medication_header_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Medication",
+                            tint = PillViolet
+                        )
+                    }
                 }
             }
         }
 
-        // Today's Stats Summary Component
+        // 1. Daily Summary View (Medication Adherence % & Water Goals Met)
         item {
-            val activeMeds = medications.filter { it.isActive }
-            TodaysStatsComponent(
+            DailySummaryView(
+                completionPercent = completionPercent,
+                takenCount = takenCount,
+                totalActiveCount = activeMeds.size,
                 waterSumMl = waterSumMl,
-                waterGoalMl = waterGoalMl,
-                totalReminders = activeMeds.size,
-                remainingReminders = pendingMeds.size
+                waterGoalMl = waterGoalMl
             )
         }
 
-        // Hero Card: Geometric Balance "Upcoming Medication"
+        // 2. Upcoming Medication Hero Card
         item {
             Card(
                 modifier = Modifier
@@ -261,9 +304,12 @@ fun TodayDashboardScreen(
                             )
                         }
 
-                        // Primary Action Button
+                        // 1-Tap Primary Action Button with Haptic Feedback
                         Button(
-                            onClick = { onTakePill(nextMedication) },
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onTakePill(nextMedication)
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp)
@@ -292,13 +338,16 @@ fun TodayDashboardScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Secondary Row (Snooze / Test Alarm)
+                        // Secondary Row (Snooze / Test Alarm) with Haptics
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Button(
-                                onClick = { onSnoozePill(nextMedication) },
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onSnoozePill(nextMedication)
+                                },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(40.dp)
@@ -319,7 +368,10 @@ fun TodayDashboardScreen(
                             }
 
                             Button(
-                                onClick = { onTestNotification(nextMedication) },
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onTestNotification(nextMedication)
+                                },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(40.dp)
@@ -336,7 +388,7 @@ fun TodayDashboardScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "Test Wrist Alarm", fontSize = 12.sp)
+                                Text(text = "Test Alarm", fontSize = 12.sp)
                             }
                         }
                     }
@@ -344,190 +396,19 @@ fun TodayDashboardScreen(
             }
         }
 
-        // Hydration Section (Geometric Balance Split View)
+        // 3. Water Counter UI Component (with Daily Reset & 1-Tap Haptic Increment/Decrement)
         item {
-            val waterRatio = (waterSumMl.toFloat() / waterGoalMl.toFloat()).coerceIn(0f, 1f)
-            val animatedWaterRatio by animateFloatAsState(
-                targetValue = waterRatio,
-                animationSpec = tween(durationMillis = 800), label = "WaterAnim"
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Hydration Progress Ring Card
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(180.dp)
-                        .testTag("hydration_ring_card"),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkCard),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Box(
-                            modifier = Modifier.size(90.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.fillMaxSize()) {
-                                val strokeWidth = 10.dp.toPx()
-                                drawArc(
-                                    color = DarkSurface,
-                                    startAngle = -90f,
-                                    sweepAngle = 360f,
-                                    useCenter = false,
-                                    style = Stroke(width = strokeWidth)
-                                )
-                                drawArc(
-                                    color = HydrationCyan,
-                                    startAngle = -90f,
-                                    sweepAngle = 360f * animatedWaterRatio,
-                                    useCenter = false,
-                                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                                )
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "${(waterRatio * 100).toInt()}%",
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.Black
-                                    ),
-                                    color = TextPrimary
-                                )
-                            }
-                        }
-
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "HYDRATION",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.2.sp
-                                ),
-                                color = HydrationCyan
-                            )
-                            Text(
-                                text = "${waterSumMl / 1000f}L / ${waterGoalMl / 1000f}L",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = TextPrimary
-                            )
-                        }
-                    }
-                }
-
-                // Hydration Quick Action Buttons Column
-                Column(
-                    modifier = Modifier
-                        .width(110.dp)
-                        .height(180.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(DarkCard)
-                            .border(1.dp, DarkCardBorder, RoundedCornerShape(20.dp))
-                            .clickable { onLogWater(250) }
-                            .testTag("add_250ml_btn"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "+250",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Black
-                                ),
-                                color = HydrationCyan
-                            )
-                            Text(
-                                text = "ML",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = TextMuted
-                            )
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(DarkCard)
-                            .border(1.dp, DarkCardBorder, RoundedCornerShape(20.dp))
-                            .clickable { onLogWater(500) }
-                            .testTag("add_500ml_btn"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "+500",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Black
-                                ),
-                                color = HydrationCyan
-                            )
-                            Text(
-                                text = "ML",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = TextMuted
-                            )
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(DarkSurface)
-                            .clickable { onUndoWater() }
-                            .testTag("undo_water_btn"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Undo,
-                                contentDescription = "Undo",
-                                tint = TextMuted,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Undo",
-                                fontSize = 11.sp,
-                                color = TextMuted,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // WearOS Tile Live Interactive Preview
-        item {
-            WearOsTileSimulator(
-                upcomingMedication = nextMedication,
+            WaterCounterComponent(
                 waterSumMl = waterSumMl,
                 waterGoalMl = waterGoalMl,
-                onTakePill = onTakePill,
-                onQuickWater = onLogWater
+                onLogWater = { amount ->
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLogWater(amount)
+                },
+                onUndoWater = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onUndoWater()
+                }
             )
         }
 
@@ -662,9 +543,12 @@ fun TodayDashboardScreen(
                                 color = TextMuted
                             )
                         } else {
-                            Row {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(
-                                    onClick = { onSkipPill(med) },
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onSkipPill(med)
+                                    },
                                     modifier = Modifier.size(36.dp)
                                 ) {
                                     Icon(
@@ -679,7 +563,10 @@ fun TodayDashboardScreen(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(PillViolet)
-                                        .clickable { onTakePill(med) }
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onTakePill(med)
+                                        }
                                         .padding(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
                                     Text(
@@ -702,18 +589,29 @@ fun TodayDashboardScreen(
     }
 }
 
+/**
+ * Daily Summary View component displaying total medication adherence percentage
+ * and water goals met for the current day.
+ */
 @Composable
-fun TodaysStatsComponent(
+fun DailySummaryView(
+    completionPercent: Int,
+    takenCount: Int,
+    totalActiveCount: Int,
     waterSumMl: Int,
     waterGoalMl: Int,
-    totalReminders: Int,
-    remainingReminders: Int,
     modifier: Modifier = Modifier
 ) {
+    val waterGoalPercent = if (waterGoalMl > 0) {
+        ((waterSumMl.toFloat() / waterGoalMl.toFloat()) * 100).toInt().coerceAtMost(100)
+    } else 0
+
+    val isWaterGoalMet = waterSumMl >= waterGoalMl
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .testTag("todays_stats_component"),
+            .testTag("daily_summary_view"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = DarkCard),
         border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
@@ -721,7 +619,8 @@ fun TodaysStatsComponent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -729,7 +628,7 @@ fun TodaysStatsComponent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "TODAY'S STATS",
+                    text = "TODAY'S SUMMARY",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp
@@ -737,108 +636,375 @@ fun TodaysStatsComponent(
                     color = TextMuted
                 )
                 Text(
-                    text = if (remainingReminders == 0) "All done!" else "$remainingReminders pending",
+                    text = if (completionPercent == 100 && isWaterGoalMet) "All Goals Met! 🎉" else "In Progress",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Bold
                     ),
-                    color = if (remainingReminders == 0) SuccessEmerald else WarningAmber
+                    color = if (completionPercent == 100 && isWaterGoalMet) SuccessEmerald else WarningAmber
                 )
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Hydration Stat Card
+                // Medication Adherence Summary Card
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(18.dp))
                         .background(DarkSurface)
-                        .border(1.dp, DarkCardBorder, RoundedCornerShape(16.dp))
-                        .padding(12.dp)
+                        .border(1.dp, DarkCardBorder, RoundedCornerShape(18.dp))
+                        .padding(14.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(HydrationCyan.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.LocalDrink,
-                                contentDescription = "Hydration Intake",
-                                tint = HydrationCyan,
-                                modifier = Modifier.size(20.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(PillViolet.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Medication,
+                                    contentDescription = "Medication Adherence",
+                                    tint = PillViolet,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Text(
+                                text = "$completionPercent%",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Black
+                                ),
+                                color = PillViolet
                             )
                         }
+
                         Column {
                             Text(
-                                text = "Hydration",
+                                text = "Medication Adherence",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextMuted
+                                color = TextMuted,
+                                maxLines = 1
                             )
                             Text(
-                                text = "${waterSumMl} ml",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
+                                text = "$takenCount / $totalActiveCount doses taken",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.SemiBold
                                 ),
                                 color = TextPrimary
                             )
                         }
+
+                        val progressFloat = (completionPercent / 100f).coerceIn(0f, 1f)
+                        val animatedProgress by animateFloatAsState(
+                            targetValue = progressFloat,
+                            animationSpec = tween(600),
+                            label = "MedAdherenceProgress"
+                        )
+                        LinearProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(CircleShape),
+                            color = PillViolet,
+                            trackColor = DarkCardBorder
+                        )
                     }
                 }
 
-                // Remaining Reminders Stat Card
+                // Water Goals Met Summary Card
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(18.dp))
                         .background(DarkSurface)
-                        .border(1.dp, DarkCardBorder, RoundedCornerShape(16.dp))
-                        .padding(12.dp)
+                        .border(1.dp, DarkCardBorder, RoundedCornerShape(18.dp))
+                        .padding(14.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(PillViolet.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Medication,
-                                contentDescription = "Reminders Left",
-                                tint = PillViolet,
-                                modifier = Modifier.size(20.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(HydrationCyan.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocalDrink,
+                                    contentDescription = "Water Goal Met",
+                                    tint = HydrationCyan,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Text(
+                                text = "$waterGoalPercent%",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Black
+                                ),
+                                color = HydrationCyan
                             )
                         }
+
                         Column {
                             Text(
-                                text = "Reminders",
+                                text = "Water Goal Met",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextMuted
+                                color = TextMuted,
+                                maxLines = 1
                             )
                             Text(
-                                text = "$remainingReminders / $totalReminders left",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
+                                text = if (isWaterGoalMet) "Goal Reached! 💧" else "${waterSumMl} / ${waterGoalMl} ml",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.SemiBold
                                 ),
                                 color = TextPrimary
                             )
+                        }
+
+                        val waterProgressFloat = (waterGoalPercent / 100f).coerceIn(0f, 1f)
+                        val animatedWaterProgress by animateFloatAsState(
+                            targetValue = waterProgressFloat,
+                            animationSpec = tween(600),
+                            label = "WaterGoalProgress"
+                        )
+                        LinearProgressIndicator(
+                            progress = { animatedWaterProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(CircleShape),
+                            color = HydrationCyan,
+                            trackColor = DarkCardBorder
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Water Counter Component providing an interactive increment/decrement counter UI
+ * with daily reset mechanism at midnight and 1-tap tactile feedback.
+ */
+@Composable
+fun WaterCounterComponent(
+    waterSumMl: Int,
+    waterGoalMl: Int,
+    onLogWater: (Int) -> Unit,
+    onUndoWater: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val glassesCount = waterSumMl / 250
+    val targetGlasses = if (waterGoalMl > 0) waterGoalMl / 250 else 8
+    val waterRatio = (waterSumMl.toFloat() / waterGoalMl.toFloat()).coerceIn(0f, 1f)
+    val animatedWaterRatio by animateFloatAsState(
+        targetValue = waterRatio,
+        animationSpec = tween(durationMillis = 800), label = "WaterCounterRing"
+    )
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("water_counter_component"),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkCard),
+        border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Title Bar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.LocalDrink,
+                        contentDescription = "Water Counter",
+                        tint = HydrationCyan,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "WATER COUNTER",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        ),
+                        color = HydrationCyan
+                    )
+                }
+
+                // Reset badge
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(DarkSurface)
+                        .border(1.dp, DarkCardBorder, RoundedCornerShape(10.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "Resets at Midnight 🌙",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextMuted
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Progress Ring Display
+                val darkSurf = DarkSurface
+                val hydCyan = HydrationCyan
+                Box(
+                    modifier = Modifier.size(100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val strokeWidth = 10.dp.toPx()
+                        drawArc(
+                            color = darkSurf,
+                            startAngle = -90f,
+                            sweepAngle = 360f,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth)
+                        )
+                        drawArc(
+                            color = hydCyan,
+                            startAngle = -90f,
+                            sweepAngle = 360f * animatedWaterRatio,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "$glassesCount",
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.Black
+                            ),
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "GLASSES",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = HydrationCyan,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                }
+
+                // Counter Stats & Direct Increment/Decrement Controls
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "${waterSumMl} ml / ${waterGoalMl} ml",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Goal: $targetGlasses glasses (250ml each)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextMuted
+                        )
+                    }
+
+                    // Interactive Counter Buttons (+ / - Glass Controls)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Decrement / Undo Button
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(DarkSurface)
+                                .border(1.dp, DarkCardBorder, RoundedCornerShape(14.dp))
+                                .clickable { onUndoWater() }
+                                .testTag("counter_decrement_btn"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Remove,
+                                    contentDescription = "Remove Glass",
+                                    tint = TextMuted,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "-1 Glass",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextMuted
+                                )
+                            }
+                        }
+
+                        // Increment Button
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(HydrationCyan)
+                                .clickable { onLogWater(250) }
+                                .testTag("counter_increment_btn"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add Glass",
+                                    tint = OledBlack,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "+1 Glass",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = OledBlack
+                                )
+                            }
                         }
                     }
                 }
             }
+
+
         }
     }
 }

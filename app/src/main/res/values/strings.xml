@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description">Displays the current day\'s adherence summary.</string>
 </resources>
