@@ -110,63 +110,6 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        // Initialize Free Firebase Services (Auth, Analytics, Crashlytics, Remote Config, Messaging, Firestore) safely
-        try {
-            if (com.google.firebase.FirebaseApp.getApps(this).isNotEmpty()) {
-                try {
-                    val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
-                    if (auth.currentUser == null) {
-                        auth.signInAnonymously().addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                android.util.Log.d("Firebase", "Anonymous auth success: ${auth.currentUser?.uid}")
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.d("Firebase", "Auth not initialized", e)
-                }
-
-                try {
-                    val analytics = com.google.firebase.analytics.FirebaseAnalytics.getInstance(this)
-                    analytics.logEvent("app_open", Bundle().apply { putString("app_name", "DoseFlow") })
-                } catch (e: Exception) {
-                    android.util.Log.d("Firebase", "Analytics not initialized", e)
-                }
-
-                try {
-                    val crashlytics = com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
-                    crashlytics.setCrashlyticsCollectionEnabled(false)
-                } catch (e: Exception) {
-                    android.util.Log.d("Firebase", "Crashlytics not initialized", e)
-                }
-
-                try {
-                    val remoteConfig = com.google.firebase.remoteconfig.FirebaseRemoteConfig.getInstance()
-                    val configSettings = com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings.Builder()
-                        .setMinimumFetchIntervalInSeconds(3600)
-                        .build()
-                    remoteConfig.setConfigSettingsAsync(configSettings)
-                    remoteConfig.setDefaultsAsync(mapOf("welcome_message" to "Welcome to DoseFlow Health & Medication Tracker"))
-                } catch (e: Exception) {
-                    android.util.Log.d("Firebase", "RemoteConfig not initialized", e)
-                }
-
-                try {
-                    com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            android.util.Log.d("Firebase", "FCM Token: ${task.result}")
-                        }
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.d("Firebase", "Messaging not initialized", e)
-                }
-            } else {
-                android.util.Log.d("Firebase", "FirebaseApp not initialized (google-services.json missing)")
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("Firebase", "Error initializing Firebase services", e)
-        }
-
         // Create Notification Channel for alarms
         ReminderScheduler.createNotificationChannel(this)
         ReminderScheduler.scheduleWaterGoalCheck(this)

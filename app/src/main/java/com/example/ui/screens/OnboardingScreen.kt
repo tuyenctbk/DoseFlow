@@ -66,12 +66,6 @@ fun OnboardingScreen(
 ) {
     var step by remember { mutableIntStateOf(0) }
 
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { _ ->
-        step = 2
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -229,7 +223,11 @@ fun OnboardingScreen(
                                 Button(
                                     onClick = {
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                            try {
+                                                step = 2
+                                            } catch (e: Exception) {
+                                                step = 2
+                                            }
                                         } else {
                                             step = 2
                                         }
