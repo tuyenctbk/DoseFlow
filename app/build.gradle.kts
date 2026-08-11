@@ -1,4 +1,6 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
   alias(libs.plugins.android.application)
@@ -10,27 +12,40 @@ plugins {
   alias(libs.plugins.firebase.crashlytics)
 }
 
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+  FileInputStream(localPropertiesFile).use { localProperties.load(it) }
+}
+
 android {
   namespace = "com.example"
-  compileSdk { version = release(36) { minorApiLevel = 1 } }
+  compileSdk = 36
 
   defaultConfig {
     applicationId = "com.soloprono.doseflow"
     minSdk = 26
     targetSdk = 36
-    versionCode = 2
-    versionName = "1.1"
+    versionCode = 5
+    versionName = "1.4"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      val storeFilePath = localProperties.getProperty("RELEASE_STORE_FILE")
+        ?: System.getenv("KEYSTORE_PATH")
+        ?: "common_release_key.jks"
+      storeFile = rootProject.file(storeFilePath)
+      storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
+        ?: System.getenv("STORE_PASSWORD")
+        ?: "dpadhero123"
+      keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
+        ?: "dpad_hero_alias"
+      keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+        ?: System.getenv("KEY_PASSWORD")
+        ?: "dpadhero123"
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
