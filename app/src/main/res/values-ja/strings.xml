@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description" translatable="false">当日の服薬・水分補給状況のサマリーを表示します。</string>
+    <string name="nav_today">今日</string>
+    <string name="nav_meds">お薬</string>
+    <string name="nav_water">水分</string>
+    <string name="nav_history">履歴</string>
+    <string name="nav_settings">設定</string>
+    <string name="weekly_health_insights">週間健康インサイト</string>
+    <string name="med_adherence">服薬遵守率</string>
+    <string name="avg_daily_water">平均水分摂取量</string>
+    <string name="appearance_theme_mode">外観とテーマモード</string>
+    <string name="theme_light">ライト</string>
+    <string name="theme_dark">ダーク</string>
+    <string name="theme_system_auto">システム連動</string>
+    <string name="biometric_app_lock">生体認証ロック</string>
+    <string name="biometric_subtitle">生体認証で健康ログを保護します</string>
+    <string name="water_intake_goal">水分目標</string>
+    <string name="reminder_interval">リマインダー間隔</string>
+    <string name="snooze_duration">スヌーズ時間</string>
+    <string name="data_management">データ管理</string>
+    <string name="export_backup">JSONのエクスポートとバックアップ</string>
+    <string name="restore_database">データベースの復元</string>
+    <string name="revisit_onboarding">初期設定ガイドを再表示</string>
+    <string name="security_locked">DoseFlow セキュリティロック中</string>
+    <string name="biometric_prompt_subtitle">指紋または顔認証で健康ログにアクセス</string>
+    <string name="cancel">キャンセル</string>
 </resources>

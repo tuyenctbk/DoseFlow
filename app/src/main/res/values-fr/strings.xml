@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description" translatable="false">Affiche le résumé de l\'adhésion pour la journée en cours.</string>
+    <string name="nav_today">Aujourd\'hui</string>
+    <string name="nav_meds">Médicaments</string>
+    <string name="nav_water">Eau</string>
+    <string name="nav_history">Historique</string>
+    <string name="nav_settings">Paramètres</string>
+    <string name="weekly_health_insights">APERÇUS SANTÉ HEBDOMADAIRES</string>
+    <string name="med_adherence">Adhérence Méd</string>
+    <string name="avg_daily_water">Moy. Eau Quotidienne</string>
+    <string name="appearance_theme_mode">APPARENCE ET MODE DE THÈME</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_system_auto">Auto Système</string>
+    <string name="biometric_app_lock">Verrouillage Biométrique</string>
+    <string name="biometric_subtitle">Sécuriser les dossiers de santé par biométrie</string>
+    <string name="water_intake_goal">Objectif Hydratation</string>
+    <string name="reminder_interval">Intervalle de Rappel</string>
+    <string name="snooze_duration">Durée de Postponement</string>
+    <string name="data_management">Gestion des Données</string>
+    <string name="export_backup">Exporter et Sauvegarder JSON</string>
+    <string name="restore_database">Restaurer la Base de Données</string>
+    <string name="revisit_onboarding">Revoir le Guide de Démarrage</string>
+    <string name="security_locked">Sécurité DoseFlow Verrouillée</string>
+    <string name="biometric_prompt_subtitle">Authentifiez-vous par empreinte ou visage pour accéder aux données</string>
+    <string name="cancel">Annuler</string>
 </resources>

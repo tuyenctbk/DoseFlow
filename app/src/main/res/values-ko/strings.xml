@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description" translatable="false">오늘의 복약 및 수분 섭취 요약 정보를 표시합니다.</string>
+    <string name="nav_today">오늘</string>
+    <string name="nav_meds">복약</string>
+    <string name="nav_water">수분</string>
+    <string name="nav_history">기록</string>
+    <string name="nav_settings">설정</string>
+    <string name="weekly_health_insights">주간 건강 인사이트</string>
+    <string name="med_adherence">복약 준수율</string>
+    <string name="avg_daily_water">일일 평균 수분</string>
+    <string name="appearance_theme_mode">화면 및 테마 모드</string>
+    <string name="theme_light">라이트</string>
+    <string name="theme_dark">다크</string>
+    <string name="theme_system_auto">시스템 설정</string>
+    <string name="biometric_app_lock">생체 인식 잠금</string>
+    <string name="biometric_subtitle">생체 인증으로 건강 기록 보호</string>
+    <string name="water_intake_goal">수분 섭취 목표</string>
+    <string name="reminder_interval">알림 간격</string>
+    <string name="snooze_duration">다시 알림 시간</string>
+    <string name="data_management">데이터 관리</string>
+    <string name="export_backup">JSON 내보내기 및 백업</string>
+    <string name="restore_database">데이터베이스 복원</string>
+    <string name="revisit_onboarding">시작 가이드 다시 보기</string>
+    <string name="security_locked">DoseFlow 보안 잠금됨</string>
+    <string name="biometric_prompt_subtitle">지문 또는 얼굴 인식으로 건강 기록에 접근하세요</string>
+    <string name="cancel">취소</string>
 </resources>

@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description" translatable="false">Exibe o resumo de adesão do dia atual.</string>
+    <string name="nav_today">Hoje</string>
+    <string name="nav_meds">Remédios</string>
+    <string name="nav_water">Água</string>
+    <string name="nav_history">Histórico</string>
+    <string name="nav_settings">Configurações</string>
+    <string name="weekly_health_insights">INSIGHTS DE SAÚDE SEMANAIS</string>
+    <string name="med_adherence">Adesão a Medicamentos</string>
+    <string name="avg_daily_water">Média Diária de Água</string>
+    <string name="appearance_theme_mode">APARÊNCIA E MODO DE TEMA</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Escuro</string>
+    <string name="theme_system_auto">Automático do Sistema</string>
+    <string name="biometric_app_lock">Bloqueio Biométrico</string>
+    <string name="biometric_subtitle">Proteger registros de saúde com biometria</string>
+    <string name="water_intake_goal">Meta de Ingestão de Água</string>
+    <string name="reminder_interval">Intervalo de Lembrete</string>
+    <string name="snooze_duration">Duração da Soneca</string>
+    <string name="data_management">Gerenciamento de Dados</string>
+    <string name="export_backup">Exportar e Fazer Backup JSON</string>
+    <string name="restore_database">Restaurar Banco de Dados</string>
+    <string name="revisit_onboarding">Revisar Guia de Introdução</string>
+    <string name="security_locked">Segurança do DoseFlow Bloqueada</string>
+    <string name="biometric_prompt_subtitle">Autentique-se com digital ou rosto para acessar os registros</string>
+    <string name="cancel">Cancelar</string>
 </resources>

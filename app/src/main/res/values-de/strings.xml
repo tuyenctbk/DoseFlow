@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description" translatable="false">Zeigt die heutige Einnahmezusammenfassung an.</string>
+    <string name="nav_today">Heute</string>
+    <string name="nav_meds">Medikamente</string>
+    <string name="nav_water">Wasser</string>
+    <string name="nav_history">Verlauf</string>
+    <string name="nav_settings">Einstellungen</string>
+    <string name="weekly_health_insights">WÖCHENTLICHE GESUNDHEITSEINBLICKE</string>
+    <string name="med_adherence">Medikamententreue</string>
+    <string name="avg_daily_water">Ø Tägliches Wasser</string>
+    <string name="appearance_theme_mode">DARSTELLUNG UND THEMENMODUS</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_system_auto">System-Auto</string>
+    <string name="biometric_app_lock">Biometrische App-Sperre</string>
+    <string name="biometric_subtitle">Gesundheitsprotokolle mit Biometrie sichern</string>
+    <string name="water_intake_goal">Wasseraufnahme-Ziel</string>
+    <string name="reminder_interval">Erinnerungsintervall</string>
+    <string name="snooze_duration"> Schlummerdauer</string>
+    <string name="data_management">Datenverwaltung</string>
+    <string name="export_backup">JSON exportieren &amp; sichern</string>
+    <string name="restore_database">Datenbank wiederherstellen</string>
+    <string name="revisit_onboarding">Einführungsleitfaden ansehen</string>
+    <string name="security_locked">DoseFlow-Sicherheit gesperrt</string>
+    <string name="biometric_prompt_subtitle">Mit Fingerabdruck oder Gesicht authentifizieren</string>
+    <string name="cancel">Abbrechen</string>
 </resources>

@@ -208,6 +208,14 @@ fun TodayDashboardScreen(
             )
         }
 
+        // Weekly Summary Insights Card
+        item {
+            WeeklySummaryCard(
+                allMedLogs = allMedLogs,
+                allWaterLogs = allWaterLogs
+            )
+        }
+
         // 2. Upcoming Medication Hero Card
         item {
             Card(
@@ -515,22 +523,30 @@ fun TodayDashboardScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (isTaken) SuccessEmerald
-                                        else if (isSkipped) TextMuted
-                                        else PillViolet
-                                    )
+                            androidx.compose.material3.Checkbox(
+                                checked = isTaken,
+                                onCheckedChange = { checked ->
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    if (checked) {
+                                        onTakePill(med)
+                                    } else {
+                                        onSkipPill(med)
+                                    }
+                                },
+                                colors = androidx.compose.material3.CheckboxDefaults.colors(
+                                    checkedColor = SuccessEmerald,
+                                    uncheckedColor = PillViolet,
+                                    checkmarkColor = OledBlack
+                                ),
+                                modifier = Modifier.testTag("med_checkbox_${med.id}")
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
                                     text = med.name,
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        textDecoration = if (isTaken) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
                                     ),
                                     color = if (isTaken) TextMuted else TextPrimary
                                 )
@@ -606,6 +622,66 @@ fun TodayDashboardScreen(
 
         item {
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+fun WeeklySummaryCard(
+    allMedLogs: List<MedicationLogEntity>,
+    allWaterLogs: List<WaterLogEntity>
+) {
+    val totalWater7Days = allWaterLogs.sumOf { it.amountMl }
+    val avgWaterMl = if (allWaterLogs.isNotEmpty()) totalWater7Days / 7 else 0
+    val takenMedsCount = allMedLogs.count { it.status == "TAKEN" }
+    val totalMedsLogged = allMedLogs.size
+    val adherenceRate = if (totalMedsLogged > 0) (takenMedsCount * 100) / totalMedsLogged else 100
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkCard),
+        border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Text(
+                text = "WEEKLY HEALTH INSIGHTS",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.5.sp
+                ),
+                color = SuccessEmerald
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "$adherenceRate%",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = "Med Adherence",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "${avgWaterMl}ml",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
+                        color = HydrationCyan
+                    )
+                    Text(
+                        text = "Avg Daily Water",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                }
+            }
         }
     }
 }
@@ -832,7 +908,7 @@ fun WaterCounterComponent(
     val haptic = LocalHapticFeedback.current
     var isSuccessWater by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
-    val waterScale by animateFloatAsState(if (isSuccessWater) 1.05f else 1.0f, label = "water_scale")
+    val waterScale by animateFloatAsState(if (isSuccessWater) 1.08f else 1.0f, label = "water_scale")
     val waterColor by animateColorAsState(if (isSuccessWater) SuccessEmerald else HydrationCyan, label = "water_color")
 
     val glassesCount = waterSumMl / 250
@@ -840,7 +916,7 @@ fun WaterCounterComponent(
     val waterRatio = (waterSumMl.toFloat() / waterGoalMl.toFloat()).coerceIn(0f, 1f)
     val animatedWaterRatio by animateFloatAsState(
         targetValue = waterRatio,
-        animationSpec = tween(durationMillis = 800), label = "WaterCounterRing"
+        animationSpec = tween(durationMillis = 1000), label = "WaterCounterRing"
     )
 
     Card(
@@ -854,10 +930,11 @@ fun WaterCounterComponent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Title Bar
+            // Title and Reset Info Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -868,11 +945,11 @@ fun WaterCounterComponent(
                         imageVector = Icons.Default.LocalDrink,
                         contentDescription = "Water Counter",
                         tint = HydrationCyan,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "WATER COUNTER",
+                        text = "HYDRATION GOAL",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.5.sp
@@ -881,16 +958,15 @@ fun WaterCounterComponent(
                     )
                 }
 
-                // Reset badge
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(DarkSurface)
-                        .border(1.dp, DarkCardBorder, RoundedCornerShape(10.dp))
+                        .border(1.dp, DarkCardBorder, RoundedCornerShape(8.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "Resets at Midnight 🌙",
+                        text = "Resets Daily 🌙",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextMuted
@@ -898,152 +974,167 @@ fun WaterCounterComponent(
                 }
             }
 
+            // Row of configurable presets (e.g., 150ml, 250ml, 500ml, 750ml)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Progress Ring Display
-                val darkSurf = DarkSurface
-                val hydCyan = HydrationCyan
-                Box(
-                    modifier = Modifier.size(100.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        val strokeWidth = 10.dp.toPx()
-                        drawArc(
-                            color = darkSurf,
-                            startAngle = -90f,
-                            sweepAngle = 360f,
-                            useCenter = false,
-                            style = Stroke(width = strokeWidth)
-                        )
-                        drawArc(
-                            color = hydCyan,
-                            startAngle = -90f,
-                            sweepAngle = 360f * animatedWaterRatio,
-                            useCenter = false,
-                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "$glassesCount",
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                fontWeight = FontWeight.Black
-                            ),
-                            color = TextPrimary
-                        )
-                        Text(
-                            text = "GLASSES",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = HydrationCyan,
-                            letterSpacing = 1.sp
-                        )
-                    }
-                }
-
-                // Counter Stats & Direct Increment/Decrement Controls
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = "${waterSumMl} ml / ${waterGoalMl} ml",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = TextPrimary
-                        )
-                        Text(
-                            text = "Goal: $targetGlasses glasses (250ml each)",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextMuted
-                        )
-                    }
-
-                    // Interactive Counter Buttons (+ / - Glass Controls)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                val presets = listOf(150, 250, 500, 750)
+                presets.forEach { preset ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(38.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(DarkSurface)
+                            .border(1.dp, DarkCardBorder, RoundedCornerShape(12.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isSuccessWater = true
+                                onLogWater(preset)
+                                coroutineScope.launch {
+                                    delay(600)
+                                    isSuccessWater = false
+                                }
+                            }
+                            .testTag("water_preset_${preset}_btn"),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Decrement / Undo Button
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(DarkSurface)
-                                .border(1.dp, DarkCardBorder, RoundedCornerShape(14.dp))
-                                .clickable { onUndoWater() }
-                                .testTag("counter_decrement_btn"),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Remove,
-                                    contentDescription = "Remove Glass",
-                                    tint = TextMuted,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "-1 Glass",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextMuted
-                                )
-                            }
-                        }
-
-                        // Increment Button
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp)
-                                .graphicsLayer {
-                                    scaleX = waterScale
-                                    scaleY = waterScale
-                                }
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(waterColor)
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    isSuccessWater = true
-                                    onLogWater(250)
-                                    coroutineScope.launch {
-                                        delay(800)
-                                        isSuccessWater = false
-                                    }
-                                }
-                                .testTag("counter_increment_btn"),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Add Glass",
-                                    tint = OledBlack,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = if (isSuccessWater) "Logged! ✓" else "+1 Glass",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = OledBlack
-                                )
-                            }
-                        }
+                        Text(
+                            text = "+${preset}ml",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = HydrationCyan
+                        )
                     }
                 }
             }
 
+            // Beautiful Large Circular Wave Log Button (1-Tap Primary Control)
+            Box(
+                modifier = Modifier
+                    .size(180.dp)
+                    .graphicsLayer {
+                        scaleX = waterScale
+                        scaleY = waterScale
+                    }
+                    .clip(CircleShape)
+                    .background(DarkSurface)
+                    .border(1.5.dp, waterColor.copy(alpha = 0.4f), CircleShape)
+                    .clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        isSuccessWater = true
+                        onLogWater(250)
+                        coroutineScope.launch {
+                            delay(600)
+                            isSuccessWater = false
+                        }
+                    }
+                    .testTag("counter_increment_btn"),
+                contentAlignment = Alignment.Center
+            ) {
+                // Wave Animation Fill representation using Canvas
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val width = size.width
+                    val height = size.height
+                    val levelY = height * (1f - animatedWaterRatio)
 
+                    val wavePath = androidx.compose.ui.graphics.Path()
+                    wavePath.moveTo(0f, height)
+                    wavePath.lineTo(0f, levelY)
+
+                    // Draw organic smooth wave sloshing based on fill status
+                    val waveCount = 2
+                    val waveHeight = 8.dp.toPx()
+                    for (x in 0..width.toInt()) {
+                        val relativeX = x.toFloat() / width
+                        val angle = relativeX * waveCount * Math.PI * 2
+                        val y = levelY + Math.sin(angle).toFloat() * waveHeight * (1f - animatedWaterRatio) * animatedWaterRatio
+                        wavePath.lineTo(x.toFloat(), y)
+                    }
+
+                    wavePath.lineTo(width, height)
+                    wavePath.close()
+
+                    drawPath(
+                        path = wavePath,
+                        color = waterColor.copy(alpha = 0.25f)
+                    )
+                }
+
+                // Inner content displaying state overlay
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = if (isSuccessWater) Icons.Default.Check else Icons.Default.LocalDrink,
+                        contentDescription = null,
+                        tint = waterColor,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = if (isSuccessWater) "Logged! ✓" else "+250 ml",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = "$glassesCount / $targetGlasses glasses",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                }
+            }
+
+            // Minimalist statistics display & adjust buttons
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "${waterSumMl} ml logged of ${waterGoalMl} ml goal",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = TextPrimary
+                )
+
+                // Sleek, minimal decrement/undo control to keep layout extremely clean
+                Box(
+                    modifier = Modifier
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(DarkSurface)
+                        .border(1.dp, DarkCardBorder, RoundedCornerShape(10.dp))
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onUndoWater()
+                        }
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .testTag("counter_decrement_btn"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            contentDescription = "Undo Glass",
+                            tint = TextMuted,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "-1 Glass (250ml)",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextMuted
+                        )
+                    }
+                }
+            }
         }
     }
 }

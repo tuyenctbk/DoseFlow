@@ -65,6 +65,9 @@ interface DoseFlowDao {
     @Delete
     suspend fun deleteWaterLog(log: WaterLogEntity)
 
+    @Query("SELECT timestamp FROM water_logs ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLatestWaterLogTimestamp(): Long?
+
     @Query("DELETE FROM water_logs WHERE id = (SELECT id FROM water_logs WHERE dateString = :date ORDER BY timestamp DESC LIMIT 1)")
     suspend fun undoLastWaterLog(date: String)
 }

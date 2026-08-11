@@ -76,6 +76,8 @@ fun SettingsScreen(
     onSetSnoozeMinutes: (Int) -> Unit,
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit,
+    isBiometricLocked: Boolean,
+    onToggleBiometric: (Boolean) -> Unit,
     onBackupDatabase: () -> Unit,
     onRestoreDatabase: (String) -> Unit,
     onRevisitOnboarding: () -> Unit,
@@ -88,6 +90,7 @@ fun SettingsScreen(
     // Conversion: 1 oz ≈ 30 ml
     val displayGoal = if (useOzUnit) (waterGoalMl / 30) else waterGoalMl
     val goalUnit = if (useOzUnit) "oz" else "ml"
+    val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
 
     LazyColumn(
         modifier = modifier
@@ -117,7 +120,66 @@ fun SettingsScreen(
             }
         }
 
-        // Appearance & Theme Card
+        // Appearance & Theme Card (Light / Dark / System Auto Mode selection)
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = DarkCard),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = "APPEARANCE & THEME MODE",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        ),
+                        color = PillViolet
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val themes = listOf("Light", "Dark", "System Auto")
+                        themes.forEach { mode ->
+                            val isSelected = when (mode) {
+                                "Light" -> !isDarkTheme
+                                "Dark" -> isDarkTheme
+                                else -> false
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) PillViolet.copy(alpha = 0.3f) else DarkSurface)
+                                    .border(1.dp, if (isSelected) PillViolet else DarkCardBorder, RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        if (mode == "Light" && isDarkTheme) onToggleTheme()
+                                        else if (mode == "Dark" && !isDarkTheme) onToggleTheme()
+                                        else if (mode == "System Auto") {
+                                            if (systemDark != isDarkTheme) onToggleTheme()
+                                        }
+                                    }
+                                    .testTag("theme_mode_$mode"),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = mode,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) PillViolet else TextSecondary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Biometric Security Card
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -136,37 +198,37 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(PillViolet.copy(alpha = 0.2f)),
+                                    .background(SuccessEmerald.copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
-                                    contentDescription = "Theme",
-                                    tint = PillViolet
+                                    imageVector = Icons.Default.Security,
+                                    contentDescription = "Security",
+                                    tint = SuccessEmerald
                                 )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = "OLED Dark Theme",
+                                    text = "Biometric App Lock",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = TextPrimary
                                 )
                                 Text(
-                                    text = if (isDarkTheme) "Deep black contrast enabled" else "Light modern mode enabled",
+                                    text = "Secure medical & health logs with biometrics",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = TextSecondary
                                 )
                             }
                         }
                         Switch(
-                            checked = isDarkTheme,
-                            onCheckedChange = { onToggleTheme() },
+                            checked = isBiometricLocked,
+                            onCheckedChange = { onToggleBiometric(it) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = PillViolet
+                                checkedTrackColor = SuccessEmerald
                             ),
-                            modifier = Modifier.testTag("theme_switch")
+                            modifier = Modifier.testTag("biometric_switch")
                         )
                     }
                 }
@@ -274,6 +336,196 @@ fun SettingsScreen(
                         Text(if (useOzUnit) "16 oz" else "500 ml", style = MaterialTheme.typography.labelSmall, color = TextMuted)
                         Text(if (useOzUnit) "100 oz" else "3000 ml", style = MaterialTheme.typography.labelSmall, color = TextMuted)
                         Text(if (useOzUnit) "200 oz" else "6000 ml", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                    }
+
+                    // Calculator Section
+                    var isCalculatorExpanded by remember { mutableStateOf(false) }
+                    var weightInput by remember { mutableStateOf("70") }
+                    var isWeightInKg by remember { mutableStateOf(true) }
+                    var activityLevel by remember { mutableStateOf("Active") } // "Sedentary", "Active", "Athletic"
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = { isCalculatorExpanded = !isCalculatorExpanded },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("toggle_calculator_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DarkSurface,
+                            contentColor = HydrationCyan
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
+                    ) {
+                        Text(
+                            text = if (isCalculatorExpanded) "Close Calculator ✕" else "Estimate My Daily Water Target 🧮",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    if (isCalculatorExpanded) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(DarkSurface, RoundedCornerShape(16.dp))
+                                .border(1.dp, DarkCardBorder, RoundedCornerShape(16.dp))
+                                .padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "PERSONAL HYDRATION ESTIMATOR",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp
+                                ),
+                                color = TextMuted
+                            )
+
+                            // Weight Row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Body Weight", style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    OutlinedTextField(
+                                        value = weightInput,
+                                        onValueChange = { weightInput = it.filter { c -> c.isDigit() } },
+                                        modifier = Modifier
+                                            .width(80.dp)
+                                            .height(50.dp)
+                                            .testTag("weight_input"),
+                                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = HydrationCyan,
+                                            unfocusedBorderColor = DarkCardBorder
+                                        ),
+                                        singleLine = true
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Row(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(OledBlack)
+                                            .border(1.dp, DarkCardBorder, RoundedCornerShape(8.dp))
+                                            .padding(2.dp)
+                                    ) {
+                                        Text(
+                                            text = "KG",
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(if (isWeightInKg) HydrationCyan else Color.Transparent)
+                                                .clickable { isWeightInKg = true }
+                                                .padding(horizontal = 6.dp, vertical = 4.dp)
+                                                .testTag("weight_kg_btn"),
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isWeightInKg) Color.Black else TextSecondary
+                                        )
+                                        Text(
+                                            text = "LBS",
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(if (!isWeightInKg) HydrationCyan else Color.Transparent)
+                                                .clickable { isWeightInKg = false }
+                                                .padding(horizontal = 6.dp, vertical = 4.dp)
+                                                .testTag("weight_lbs_btn"),
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (!isWeightInKg) Color.Black else TextSecondary
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Activity Level Row
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text("Activity Level", style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    listOf("Sedentary", "Active", "Athletic").forEach { level ->
+                                        val isSelected = activityLevel == level
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(if (isSelected) HydrationCyan else OledBlack)
+                                                .border(
+                                                    1.dp,
+                                                    if (isSelected) HydrationCyan else DarkCardBorder,
+                                                    RoundedCornerShape(10.dp)
+                                                )
+                                                .clickable { activityLevel = level }
+                                                .padding(vertical = 8.dp)
+                                                .testTag("activity_${level.lowercase()}_btn"),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = level,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelected) Color.Black else TextSecondary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Calculations
+                            val weightVal = weightInput.toDoubleOrNull() ?: 70.0
+                            val weightKg = if (isWeightInKg) weightVal else weightVal * 0.45359237
+                            val baseIntakeMl = weightKg * 35.0
+                            val extraIntakeMl = when (activityLevel) {
+                                "Sedentary" -> 0.0
+                                "Active" -> 350.0
+                                "Athletic" -> 750.0
+                                else -> 350.0
+                            }
+                            val calculatedMl = (baseIntakeMl + extraIntakeMl).toInt().coerceIn(500, 6000)
+                            val displaySuggested = if (useOzUnit) "${calculatedMl / 30} oz" else "$calculatedMl ml"
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("Suggested Target", fontSize = 11.sp, color = TextMuted)
+                                    Text(
+                                        text = displaySuggested,
+                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
+                                        color = HydrationCyan
+                                    )
+                                }
+
+                                Button(
+                                    onClick = {
+                                        onSetWaterGoal(calculatedMl)
+                                        isCalculatorExpanded = false
+                                    },
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = HydrationCyan,
+                                        contentColor = Color.Black
+                                    ),
+                                    modifier = Modifier.testTag("apply_suggested_water_btn")
+                                ) {
+                                    Text("Apply", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -34,6 +34,15 @@ class DoseFlowRepository(private val dao: DoseFlowDao, private val context: Cont
         private const val KEY_SNOOZE_MINUTES = "reminder_snooze_minutes"
         private const val KEY_SEED_DONE = "seed_data_done"
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
+        private const val KEY_BIOMETRIC_LOCKED = "biometric_locked"
+    }
+
+    fun isBiometricLocked(): Boolean {
+        return prefs.getBoolean(KEY_BIOMETRIC_LOCKED, false)
+    }
+
+    fun setBiometricLocked(locked: Boolean) {
+        prefs.edit().putBoolean(KEY_BIOMETRIC_LOCKED, locked).apply()
     }
 
     fun getReminderIntervalHours(): Int {
@@ -176,6 +185,26 @@ class DoseFlowRepository(private val dao: DoseFlowDao, private val context: Cont
 
     suspend fun deleteWaterLog(log: WaterLogEntity) {
         dao.deleteWaterLog(log)
+    }
+
+    suspend fun getLastWaterLogTime(): Long {
+        return dao.getLatestWaterLogTimestamp() ?: System.currentTimeMillis()
+    }
+
+    suspend fun insertMedLog(log: MedicationLogEntity) {
+        dao.insertMedLog(log)
+    }
+
+    suspend fun insertWaterLog(log: WaterLogEntity) {
+        dao.insertWaterLog(log)
+    }
+
+    suspend fun updateMedLog(log: MedicationLogEntity) {
+        dao.insertMedLog(log)
+    }
+
+    suspend fun updateWaterLog(log: WaterLogEntity) {
+        dao.insertWaterLog(log)
     }
 
     suspend fun seedSampleDataIfEmpty() {

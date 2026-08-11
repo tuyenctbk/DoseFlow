@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description" translatable="false">Mostra il riepilogo dell\'aderenza per la giornata odierna.</string>
+    <string name="nav_today">Oggi</string>
+    <string name="nav_meds">Farmaci</string>
+    <string name="nav_water">Acqua</string>
+    <string name="nav_history">Cronologia</string>
+    <string name="nav_settings">Impostazioni</string>
+    <string name="weekly_health_insights">APPROFONDIMENTI SETTIMANALI</string>
+    <string name="med_adherence">Aderenza Farmaci</string>
+    <string name="avg_daily_water">Media Acqua Giornaliera</string>
+    <string name="appearance_theme_mode">ASPETTO E TEMA</string>
+    <string name="theme_light">Chiaro</string>
+    <string name="theme_dark">Scuro</string>
+    <string name="theme_system_auto">Automatico di Sistema</string>
+    <string name="biometric_app_lock">Blocco biometrico app</string>
+    <string name="biometric_subtitle">Proteggi i registri sanitari con la biometrica</string>
+    <string name="water_intake_goal">Obiettivo Idratazione</string>
+    <string name="reminder_interval">Intervallo Promemoria</string>
+    <string name="snooze_duration">Durata Posticipo</string>
+    <string name="data_management">Gestione Dati</string>
+    <string name="export_backup">Esporta e Salva JSON</string>
+    <string name="restore_database">Ripristina Database</string>
+    <string name="revisit_onboarding">Rivedi Guida introduttiva</string>
+    <string name="security_locked">Sicurezza DoseFlow Bloccata</string>
+    <string name="biometric_prompt_subtitle">Autenticati con impronta o viso per accedere ai dati</string>
+    <string name="cancel">Annulla</string>
 </resources>

@@ -3,21 +3,26 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Centered within 66dp bounds (21 to 87) -->
-    <!-- Pill Icon Left/Top (Violet) -->
+    <!-- Center backing card shape -->
     <path
-        android:fillColor="#8B5CF6"
-        android:pathData="M38,36 C31,36 26,41 26,48 C26,55 31,60 38,60 L50,60 C57,60 62,55 62,48 C62,41 57,36 50,36 Z" />
+        android:fillColor="#1E293B"
+        android:pathData="M54,20 C74.434,20 91,36.566 91,57 C91,77.434 74.434,94 54,94 C33.566,94 17,77.434 17,57 C17,36.566 33.566,20 54,20 Z" />
+    
+    <!-- Pill Icon Left (Vibrant Violet Gradient effect) -->
     <path
-        android:fillColor="#A78BFA"
-        android:pathData="M38,36 C31,36 26,41 26,48 C26,55 31,60 38,60 L44,60 L44,36 Z" />
+        android:fillColor="#A855F7"
+        android:pathData="M34,36 C28,36 24,41 24,48 C24,55 28,60 34,60 L52,60 C58,60 62,55 62,48 C62,41 58,36 52,36 Z" />
+    <path
+        android:fillColor="#C084FC"
+        android:pathData="M34,36 C28,36 24,41 24,48 C24,55 28,60 34,60 L43,60 L43,36 Z" />
 
     <!-- Water Drop Right/Bottom (Cyan) -->
     <path
         android:fillColor="#06B6D4"
-        android:pathData="M68,46 C68,46 52,62 52,70 C52,79 59,86 68,86 C77,86 84,79 84,70 C84,62 68,46 68,46 Z" />
+        android:pathData="M68,48 C68,48 52,64 52,72 C52,81 59,88 68,88 C77,88 84,81 84,72 C84,64 68,48 68,48 Z" />
     <!-- Water Drop Highlight -->
     <path
         android:fillColor="#67E8F9"
-        android:pathData="M62,68 C62,64 68,54 68,54 C68,54 70,58 70,62 C70,65 68,67 65,67 C63,67 62,69 62,68 Z" />
+        android:pathData="M64,70 C64,66 68,58 68,58 C68,58 70,62 70,65 C70,68 68,70 65,70 C63,70 64,72 64,70 Z" />
 </vector>
+

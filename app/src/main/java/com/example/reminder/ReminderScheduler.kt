@@ -19,25 +19,42 @@ import java.util.Calendar
 object ReminderScheduler {
 
     const val CHANNEL_ID = "doseflow_reminders"
-    const val CHANNEL_NAME = "DoseFlow Medication & Water Reminders"
+    const val MEDICATION_CHANNEL_ID = "doseflow_medication_channel"
+    const val HYDRATION_CHANNEL_ID = "doseflow_hydration_channel"
+    const val CHANNEL_NAME = "DoseFlow Reminders"
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Notifications for scheduled medications and water reminders"
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 300, 150, 300)
-            }
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+
+            // Medication Channel (High Importance, distinct vibration)
+            val medChannel = NotificationChannel(
+                MEDICATION_CHANNEL_ID,
+                "Medication Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Critical alerts for scheduled medications"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 400, 200, 400)
+            }
+            notificationManager.createNotificationChannel(medChannel)
+
+            // Hydration Channel (Default Importance, water nudge)
+            val hydrationChannel = NotificationChannel(
+                HYDRATION_CHANNEL_ID,
+                "Hydration Reminders",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Friendly reminders to drink water and stay hydrated"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 200, 200, 200)
+            }
+            notificationManager.createNotificationChannel(hydrationChannel)
         }
     }
 
+    @android.annotation.SuppressLint("ScheduleExactAlarm")
     fun scheduleMedicationAlarm(
         context: Context,
         medicationId: Long,
@@ -97,6 +114,7 @@ object ReminderScheduler {
         }
     }
 
+    @android.annotation.SuppressLint("ScheduleExactAlarm")
     fun snoozeMedicationAlarm(
         context: Context,
         medicationId: Long,
@@ -157,5 +175,81 @@ object ReminderScheduler {
         if (pendingIntent != null) {
             alarmManager.cancel(pendingIntent)
         }
+    }
+
+    fun scheduleWaterGoalCheck(context: Context) {
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.NOT_REQUIRED)
+            .build()
+
+        val periodicWork = androidx.work.PeriodicWorkRequestBuilder<WaterGoalCheckWorker>(
+            24, java.util.concurrent.TimeUnit.HOURS
+        ).setConstraints(constraints).build()
+
+        androidx.work.WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "WaterGoalCheckWork",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            periodicWork
+        )
+    }
+
+    fun scheduleWaterIntervalCheck(context: Context) {
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.NOT_REQUIRED)
+            .build()
+
+        val periodicWork = androidx.work.PeriodicWorkRequestBuilder<WaterIntervalWorker>(
+            2, java.util.concurrent.TimeUnit.HOURS
+        ).setConstraints(constraints).build()
+
+        androidx.work.WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "WaterIntervalCheckWork",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            periodicWork
+        )
+    }
+
+    fun sendHydrationNudgeNotification(context: Context) {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context, 888, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = androidx.core.app.NotificationCompat.Builder(context, HYDRATION_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_menu_compass)
+            .setContentTitle("💧 Time for a Glass of Water!")
+            .setContentText("You haven't logged water in 2 hours. Keep your hydration goal on track!")
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(888, notification)
+    }
+
+    fun sendWaterGoalNotification(context: Context, currentMl: Int, goalMl: Int) {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context, 999, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = androidx.core.app.NotificationCompat.Builder(context, HYDRATION_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_menu_compass)
+            .setContentTitle("💧 Hydration Goal Reminder")
+            .setContentText("You've logged ${currentMl}ml of your ${goalMl}ml daily goal. Take a glass of water before bed!")
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(999, notification)
     }
 }

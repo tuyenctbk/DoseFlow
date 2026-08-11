@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description" translatable="false">वर्तमान दिन का अनुपालन सारांश प्रदर्शित करता है।</string>
+    <string name="nav_today">आज</string>
+    <string name="nav_meds">दवाइयां</string>
+    <string name="nav_water">पानी</string>
+    <string name="nav_history">इतिहास</string>
+    <string name="nav_settings">सेटिंग्स</string>
+    <string name="weekly_health_insights">साप्ताहिक स्वास्थ्य अंतर्दृष्टि</string>
+    <string name="med_adherence">दवा अनुपालन</string>
+    <string name="avg_daily_water">दैनिक औसत पानी</string>
+    <string name="appearance_theme_mode">दिखावट और थीम मोड</string>
+    <string name="theme_light">हल्का</string>
+    <string name="theme_dark">गहरा</string>
+    <string name="theme_system_auto">सिस्टम ऑटो</string>
+    <string name="biometric_app_lock">बायोमेट्रिक ऐप लॉक</string>
+    <string name="biometric_subtitle">बायोमेट्रिक्स के साथ स्वास्थ्य लॉग सुरक्षित करें</string>
+    <string name="water_intake_goal">पानी सेवन का लक्ष्य</string>
+    <string name="reminder_interval">रिमाइंडर अंतराल</string>
+    <string name="snooze_duration">स्नूज़ अवधि</string>
+    <string name="data_management">डेटा प्रबंधन</string>
+    <string name="export_backup">JSON निर्यात और बैकअप</string>
+    <string name="restore_database">डेटाबेस पुनर्स्थापित करें</string>
+    <string name="revisit_onboarding">ऑनबोर्डिंग गाइड देखें</string>
+    <string name="security_locked">DoseFlow सुरक्षा लॉक</string>
+    <string name="biometric_prompt_subtitle">स्वास्थ्य लॉग तक पहुंचने के लिए अपने फिंगरप्रिंट या चेहरे से प्रमाणीकरण करें</string>
+    <string name="cancel">रद्द करें</string>
 </resources>

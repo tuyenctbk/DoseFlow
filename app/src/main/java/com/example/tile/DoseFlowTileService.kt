@@ -13,6 +13,7 @@ import com.example.data.DoseFlowRepository
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import java.util.Calendar
 import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 
@@ -44,11 +45,48 @@ class DoseFlowTileService : TileService() {
             }
         }
 
-        // Use standard tiles LayoutElementBuilders for perfect type-safety
+        val nextMedicationText = runBlocking {
+            try {
+                val meds = repo.activeMedications.first()
+                if (meds.isEmpty()) {
+                    "No active meds"
+                } else {
+                    val calendar = Calendar.getInstance()
+                    val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+                    val currentMinute = calendar.get(Calendar.MINUTE)
+
+                    val todayNext = meds
+                        .filter { it.timeHour > currentHour || (it.timeHour == currentHour && it.timeMinute > currentMinute) }
+                        .minByOrNull { it.timeHour * 60 + it.timeMinute }
+
+                    val nextMed = todayNext ?: meds.minByOrNull { it.timeHour * 60 + it.timeMinute }
+                    if (nextMed != null) {
+                        val timeString = String.format("%02d:%02d", nextMed.timeHour, nextMed.timeMinute)
+                        "Next: ${nextMed.name} ($timeString)"
+                    } else {
+                        "No meds scheduled"
+                    }
+                }
+            } catch (e: Exception) {
+                "DoseFlow Active"
+            }
+        }
+
+        // Use standard tiles LayoutElementBuilders for perfect type-safety and visual clarity
         val rootLayout = LayoutElementBuilders.Column.Builder()
             .addContent(
                 LayoutElementBuilders.Text.Builder()
                     .setText("DoseFlow Hydration")
+                    .build()
+            )
+            .addContent(
+                LayoutElementBuilders.Spacer.Builder()
+                    .setHeight(DimensionBuilders.dp(4f))
+                    .build()
+            )
+            .addContent(
+                LayoutElementBuilders.Text.Builder()
+                    .setText("$todayWater / $waterGoal ml")
                     .build()
             )
             .addContent(
@@ -58,7 +96,7 @@ class DoseFlowTileService : TileService() {
             )
             .addContent(
                 LayoutElementBuilders.Text.Builder()
-                    .setText("$todayWater / $waterGoal ml")
+                    .setText(nextMedicationText)
                     .build()
             )
             .build()

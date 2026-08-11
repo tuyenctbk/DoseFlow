@@ -69,18 +69,108 @@ import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.WarningAmber
 
 
-class MainActivity : ComponentActivity() {
+class MainActivity : androidx.fragment.app.FragmentActivity() {
 
 
     private val viewModel: DoseFlowViewModel by viewModels()
+
+    private fun checkBiometricUnlock() {
+        val executor = androidx.core.content.ContextCompat.getMainExecutor(this)
+        val biometricPrompt = androidx.biometric.BiometricPrompt(
+            this,
+            executor,
+            object : androidx.biometric.BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: androidx.biometric.BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    Toast.makeText(this@MainActivity, "🔓 Biometric Unlocked Successfully", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    Toast.makeText(this@MainActivity, "Authentication error: $errString", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                    Toast.makeText(this@MainActivity, "Authentication failed. Try again.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+
+        val promptInfo = androidx.biometric.BiometricPrompt.PromptInfo.Builder()
+            .setTitle("DoseFlow Security Locked")
+            .setSubtitle("Authenticate with your fingerprint or face to access health logs")
+            .setNegativeButtonText("Cancel")
+            .build()
+
+        biometricPrompt.authenticate(promptInfo)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
+        // Initialize Free Firebase Services (Auth, Analytics, Crashlytics, Remote Config, Messaging, Firestore) safely
+        try {
+            if (com.google.firebase.FirebaseApp.getApps(this).isNotEmpty()) {
+                try {
+                    val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+                    if (auth.currentUser == null) {
+                        auth.signInAnonymously().addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                android.util.Log.d("Firebase", "Anonymous auth success: ${auth.currentUser?.uid}")
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.d("Firebase", "Auth not initialized", e)
+                }
+
+                try {
+                    val analytics = com.google.firebase.analytics.FirebaseAnalytics.getInstance(this)
+                    analytics.logEvent("app_open", Bundle().apply { putString("app_name", "DoseFlow") })
+                } catch (e: Exception) {
+                    android.util.Log.d("Firebase", "Analytics not initialized", e)
+                }
+
+                try {
+                    val crashlytics = com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
+                    crashlytics.setCrashlyticsCollectionEnabled(false)
+                } catch (e: Exception) {
+                    android.util.Log.d("Firebase", "Crashlytics not initialized", e)
+                }
+
+                try {
+                    val remoteConfig = com.google.firebase.remoteconfig.FirebaseRemoteConfig.getInstance()
+                    val configSettings = com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings.Builder()
+                        .setMinimumFetchIntervalInSeconds(3600)
+                        .build()
+                    remoteConfig.setConfigSettingsAsync(configSettings)
+                    remoteConfig.setDefaultsAsync(mapOf("welcome_message" to "Welcome to DoseFlow Health & Medication Tracker"))
+                } catch (e: Exception) {
+                    android.util.Log.d("Firebase", "RemoteConfig not initialized", e)
+                }
+
+                try {
+                    com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            android.util.Log.d("Firebase", "FCM Token: ${task.result}")
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.d("Firebase", "Messaging not initialized", e)
+                }
+            } else {
+                android.util.Log.d("Firebase", "FirebaseApp not initialized (google-services.json missing)")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("Firebase", "Error initializing Firebase services", e)
+        }
 
         // Create Notification Channel for alarms
         ReminderScheduler.createNotificationChannel(this)
+        ReminderScheduler.scheduleWaterGoalCheck(this)
+        ReminderScheduler.scheduleWaterIntervalCheck(this)
 
         setContent {
             val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle()
@@ -96,6 +186,13 @@ class MainActivity : ComponentActivity() {
                 val csvString by viewModel.csvString.collectAsStateWithLifecycle()
                 val reminderIntervalHours by viewModel.reminderIntervalHours.collectAsStateWithLifecycle()
                 val snoozeMinutes by viewModel.snoozeMinutes.collectAsStateWithLifecycle()
+                val isBiometricLocked by viewModel.isBiometricLocked.collectAsStateWithLifecycle()
+
+                LaunchedEffect(isBiometricLocked) {
+                    if (isBiometricLocked) {
+                        checkBiometricUnlock()
+                    }
+                }
 
                 val isOnboardingCompleted by viewModel.isOnboardingCompleted.collectAsStateWithLifecycle()
 
@@ -217,22 +314,28 @@ class MainActivity : ComponentActivity() {
                                         viewModel.exportCsv() 
                                     },
                                     onClearCsv = { viewModel.clearCsv() },
+                                    onDeleteLogs = { meds, water -> viewModel.deleteLogs(meds, water) },
+                                    onUpdateMedLog = { log -> viewModel.updateMedicationLog(log) },
+                                    onUpdateWaterLog = { log -> viewModel.updateWaterLog(log) },
                                     onRevisitOnboarding = { viewModel.resetOnboarding() }
                                 )
 
-                                4 -> SettingsScreen(
-                                    waterGoalMl = waterGoalMl,
-                                    onSetWaterGoal = { viewModel.setWaterGoal(it) },
-                                    reminderIntervalHours = reminderIntervalHours,
-                                    onSetReminderInterval = { viewModel.setReminderIntervalHours(it) },
-                                    snoozeMinutes = snoozeMinutes,
-                                    onSetSnoozeMinutes = { viewModel.setSnoozeMinutes(it) },
-                                    isDarkTheme = isDarkTheme,
-                                    onToggleTheme = { viewModel.toggleTheme() },
-                                    onBackupDatabase = { viewModel.backupDatabase() },
-                                    onRestoreDatabase = { json -> viewModel.restoreDatabase(json) },
-                                    onRevisitOnboarding = { viewModel.resetOnboarding() }
-                                )
+                                                                 4 -> SettingsScreen(
+                                     waterGoalMl = waterGoalMl,
+                                     onSetWaterGoal = { viewModel.setWaterGoal(it) },
+                                     reminderIntervalHours = reminderIntervalHours,
+                                     onSetReminderInterval = { viewModel.setReminderIntervalHours(it) },
+                                     snoozeMinutes = snoozeMinutes,
+                                     onSetSnoozeMinutes = { viewModel.setSnoozeMinutes(it) },
+                                     isDarkTheme = isDarkTheme,
+                                     onToggleTheme = { viewModel.toggleTheme() },
+                                     isBiometricLocked = isBiometricLocked,
+                                     onToggleBiometric = { viewModel.setBiometricLocked(it) },
+                                     onBackupDatabase = { viewModel.backupDatabase() },
+                                     onRestoreDatabase = { json -> viewModel.restoreDatabase(json) },
+                                     onRevisitOnboarding = { viewModel.resetOnboarding() }
+                                 )
+
                             }
                         }
                     }

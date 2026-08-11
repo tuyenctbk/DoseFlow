@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description" translatable="false">Отображает сводку приема лекарств и воды за текущий день.</string>
+    <string name="nav_today">Сегодня</string>
+    <string name="nav_meds">Лекарства</string>
+    <string name="nav_water">Вода</string>
+    <string name="nav_history">История</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="weekly_health_insights">НЕДЕЛЬНЫЙ ОБЗОР ЗДОРОВЬЯ</string>
+    <string name="med_adherence">Приверженность лечению</string>
+    <string name="avg_daily_water">Средняя вода в день</string>
+    <string name="appearance_theme_mode">ВНЕШНИЙ ВИД И ТЕМА</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Темная</string>
+    <string name="theme_system_auto">Системная</string>
+    <string name="biometric_app_lock">Биометрическая блокировка</string>
+    <string name="biometric_subtitle">Защита медицинских записей биометрией</string>
+    <string name="water_intake_goal">Цель потребления воды</string>
+    <string name="reminder_interval">Интервал напоминаний</string>
+    <string name="snooze_duration">Длительность отсрочки</string>
+    <string name="data_management">Управление данными</string>
+    <string name="export_backup">Экспорт и бэкап JSON</string>
+    <string name="restore_database">Восстановить базу данных</string>
+    <string name="revisit_onboarding">Повторить руководство</string>
+    <string name="security_locked">Безопасность DoseFlow заблокирована</string>
+    <string name="biometric_prompt_subtitle">Пройдите аутентификацию по отпечатку или лицу</string>
+    <string name="cancel">Отмена</string>
 </resources>

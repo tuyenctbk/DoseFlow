@@ -1,4 +1,28 @@
 <resources>
     <string name="app_name">DoseFlow</string>
-    <string name="tile_description">Displays the current day\'s adherence summary.</string>
+    <string name="tile_description" translatable="false">Displays the current day\'s adherence summary.</string>
+    <string name="nav_today">Today</string>
+    <string name="nav_meds">Medications</string>
+    <string name="nav_water">Water</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+    <string name="weekly_health_insights">WEEKLY HEALTH INSIGHTS</string>
+    <string name="med_adherence">Med Adherence</string>
+    <string name="avg_daily_water">Avg Daily Water</string>
+    <string name="appearance_theme_mode">APPEARANCE &amp; THEME MODE</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system_auto">System Auto</string>
+    <string name="biometric_app_lock">Biometric App Lock</string>
+    <string name="biometric_subtitle">Secure medical &amp; health logs with biometrics</string>
+    <string name="water_intake_goal">Water Intake Goal</string>
+    <string name="reminder_interval">Reminder Interval</string>
+    <string name="snooze_duration">Snooze Duration</string>
+    <string name="data_management">Data Management</string>
+    <string name="export_backup">Export &amp; Backup JSON</string>
+    <string name="restore_database">Restore Database</string>
+    <string name="revisit_onboarding">Revisit Onboarding Guide</string>
+    <string name="security_locked">DoseFlow Security Locked</string>
+    <string name="biometric_prompt_subtitle">Authenticate with your fingerprint or face to access health logs</string>
+    <string name="cancel">Cancel</string>
 </resources>

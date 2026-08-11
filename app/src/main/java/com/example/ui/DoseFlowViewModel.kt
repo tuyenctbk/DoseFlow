@@ -121,6 +121,17 @@ class DoseFlowViewModel(application: Application) : AndroidViewModel(application
     private val _isDarkTheme = MutableStateFlow(repository.isDarkThemeEnabled())
     val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
 
+    private val _isBiometricLocked = MutableStateFlow(repository.isBiometricLocked())
+    val isBiometricLocked: StateFlow<Boolean> = _isBiometricLocked.asStateFlow()
+
+    fun setBiometricLocked(locked: Boolean) {
+        repository.setBiometricLocked(locked)
+        _isBiometricLocked.value = locked
+        viewModelScope.launch {
+            _userMessage.emit(UserMessage.Toast(if (locked) "🔒 Biometric App Security Enabled" else "🔓 Biometric App Security Disabled"))
+        }
+    }
+
     fun toggleTheme() {
         val newMode = !_isDarkTheme.value
         repository.setDarkThemeEnabled(newMode)
@@ -211,6 +222,61 @@ class DoseFlowViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             repository.undoLastMedLog()
             _userMessage.emit(UserMessage.Toast("↩️ Undid last medication action"))
+        }
+    }
+
+    private var lastDeletedMedLogs = listOf<MedicationLogEntity>()
+    private var lastDeletedWaterLogs = listOf<WaterLogEntity>()
+
+    fun deleteMedicationLog(log: MedicationLogEntity) {
+        viewModelScope.launch {
+            lastDeletedMedLogs = listOf(log)
+            lastDeletedWaterLogs = emptyList()
+            repository.deleteMedLog(log)
+            _userMessage.emit(UserMessage.Toast("🗑️ Deleted medication log"))
+        }
+    }
+
+    fun deleteWaterLog(log: WaterLogEntity) {
+        viewModelScope.launch {
+            lastDeletedWaterLogs = listOf(log)
+            lastDeletedMedLogs = emptyList()
+            repository.deleteWaterLog(log)
+            _userMessage.emit(UserMessage.Toast("🗑️ Deleted water log"))
+        }
+    }
+
+    fun updateMedicationLog(log: MedicationLogEntity) {
+        viewModelScope.launch {
+            repository.updateMedLog(log)
+            _userMessage.emit(UserMessage.Toast("✏️ Updated medication log"))
+        }
+    }
+
+    fun updateWaterLog(log: WaterLogEntity) {
+        viewModelScope.launch {
+            repository.updateWaterLog(log)
+            _userMessage.emit(UserMessage.Toast("✏️ Updated water log"))
+        }
+    }
+
+    fun deleteLogs(medLogs: List<MedicationLogEntity>, waterLogs: List<WaterLogEntity>) {
+        viewModelScope.launch {
+            lastDeletedMedLogs = medLogs
+            lastDeletedWaterLogs = waterLogs
+            medLogs.forEach { repository.deleteMedLog(it) }
+            waterLogs.forEach { repository.deleteWaterLog(it) }
+            _userMessage.emit(UserMessage.Toast("🗑️ Deleted ${medLogs.size + waterLogs.size} logs"))
+        }
+    }
+
+    fun undoLastDeletion() {
+        viewModelScope.launch {
+            lastDeletedMedLogs.forEach { repository.insertMedLog(it) }
+            lastDeletedWaterLogs.forEach { repository.insertWaterLog(it) }
+            lastDeletedMedLogs = emptyList()
+            lastDeletedWaterLogs = emptyList()
+            _userMessage.emit(UserMessage.Toast("↩️ Restored deleted items"))
         }
     }
 

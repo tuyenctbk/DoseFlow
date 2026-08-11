@@ -1,4 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DoseFlow</string>
+    <string name="tile_description" translatable="false">يعرض ملخص الالتزام لليوم الحالي.</string>
+    <string name="nav_today">اليوم</string>
+    <string name="nav_meds">الأدوية</string>
+    <string name="nav_water">الماء</string>
+    <string name="nav_history">السجل</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="weekly_health_insights">رؤى الصحة الأسبوعية</string>
+    <string name="med_adherence">الالتزام بالأدوية</string>
+    <string name="avg_daily_water">متوسط الماء اليومي</string>
+    <string name="appearance_theme_mode">المظهر ووضع السمة</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_system_auto">تلقائي حسب النظام</string>
+    <string name="biometric_app_lock">قفل التطبيق البيومتري</string>
+    <string name="biometric_subtitle">تأمين سجلات الصحة باستخدام القياسات الحيوية</string>
+    <string name="water_intake_goal">هدف استهلاك الماء</string>
+    <string name="reminder_interval">فترة التذكير</string>
+    <string name="snooze_duration">مدة الغفیان</string>
+    <string name="data_management">إدارة البيانات</string>
+    <string name="export_backup">تصدير وعمل نسخة احتياطية JSON</string>
+    <string name="restore_database">استعادة قاعدة البيانات</string>
+    <string name="revisit_onboarding">مراجعة دليل البدء</string>
+    <string name="security_locked">أمان DoseFlow مقفل</string>
+    <string name="biometric_prompt_subtitle">قم المصادقة ببصمة الإصبع أو الوجه للوصول إلى السجلات الصحية</string>
+    <string name="cancel">إلغاء</string>
 </resources>
