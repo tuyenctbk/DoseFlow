@@ -252,4 +252,50 @@ object ReminderScheduler {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(999, notification)
     }
+
+    fun scheduleDailyMedicationCheck(context: Context) {
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.NOT_REQUIRED)
+            .build()
+
+        val periodicWork = androidx.work.PeriodicWorkRequestBuilder<DailyMedicationReminderWorker>(
+            24, java.util.concurrent.TimeUnit.HOURS
+        ).setConstraints(constraints).build()
+
+        androidx.work.WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "DailyMedicationReminderWork",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            periodicWork
+        )
+    }
+
+    fun sendMedicationReminderNotification(
+        context: Context,
+        medicationId: Long,
+        medicationName: String,
+        dosage: String
+    ) {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            medicationId.toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = androidx.core.app.NotificationCompat.Builder(context, MEDICATION_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("💊 Scheduled Medication: $medicationName")
+            .setContentText("Time to take your $dosage of $medicationName!")
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(androidx.core.app.NotificationCompat.DEFAULT_ALL)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify((medicationId + 5000).toInt(), notification)
+    }
 }

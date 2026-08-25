@@ -7,6 +7,7 @@ import com.example.data.AppDatabase
 import com.example.data.DoseFlowRepository
 import com.example.data.MedicationEntity
 import com.example.data.MedicationLogEntity
+import com.example.data.WaterDataStoreManager
 import com.example.data.WaterLogEntity
 import com.example.reminder.ReminderScheduler
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,6 +30,14 @@ class DoseFlowViewModel(application: Application) : AndroidViewModel(application
 
     private val repository: DoseFlowRepository
     private val context = application.applicationContext
+    private val waterDataStoreManager = WaterDataStoreManager(context)
+
+    val dsWaterCount: StateFlow<Int> = waterDataStoreManager.dailyWaterCountFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
 
     init {
         val dao = AppDatabase.getDatabase(context).doseFlowDao()
@@ -206,6 +215,7 @@ class DoseFlowViewModel(application: Application) : AndroidViewModel(application
     fun logWater(amountMl: Int) {
         viewModelScope.launch {
             repository.logWater(amountMl)
+            waterDataStoreManager.addWater(amountMl)
             val msg = if (amountMl >= 0) "💧 +${amountMl}ml Water logged!" else "💧 ${amountMl}ml Water adjusted!"
             _userMessage.emit(UserMessage.Toast(msg))
         }

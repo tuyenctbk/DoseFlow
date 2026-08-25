@@ -71,6 +71,12 @@ import com.example.data.MedicationEntity
 import com.example.data.MedicationLogEntity
 import com.example.data.WaterLogEntity
 
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.theme.DarkCard
 import com.example.ui.theme.DarkCardBorder
 import com.example.ui.theme.DarkSurface
@@ -83,9 +89,11 @@ import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.WarningAmber
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayDashboardScreen(
     medications: List<MedicationEntity>,
@@ -108,6 +116,15 @@ fun TodayDashboardScreen(
 ) {
     val haptic = LocalHapticFeedback.current
     val dateFormatted = SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date())
+
+    var showHistoryBottomSheet by remember { mutableStateOf(false) }
+
+    if (showHistoryBottomSheet) {
+        HistoricalLogsBottomSheet(
+            allMedLogs = allMedLogs,
+            onDismiss = { showHistoryBottomSheet = false }
+        )
+    }
 
     // Identify active and pending medications
     val activeMeds = medications.filter { it.isActive }
@@ -208,11 +225,12 @@ fun TodayDashboardScreen(
             )
         }
 
-        // Weekly Summary Insights Card
+        // Weekly Summary Insights Card & Canvas Trends Chart
         item {
             WeeklySummaryCard(
                 allMedLogs = allMedLogs,
-                allWaterLogs = allWaterLogs
+                allWaterLogs = allWaterLogs,
+                onReviewHistory = { showHistoryBottomSheet = true }
             )
         }
 
@@ -629,30 +647,70 @@ fun TodayDashboardScreen(
 @Composable
 fun WeeklySummaryCard(
     allMedLogs: List<MedicationLogEntity>,
-    allWaterLogs: List<WaterLogEntity>
+    allWaterLogs: List<WaterLogEntity>,
+    onReviewHistory: () -> Unit
 ) {
+    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+    val dayFormat = remember { SimpleDateFormat("EEE", Locale.getDefault()) }
+
+    val past7Days = remember(allMedLogs, allWaterLogs) {
+        val list = mutableListOf<Triple<String, Int, Int>>() // Triple(DayName, WaterMl, AdherencePct)
+        for (i in 6 downTo 0) {
+            val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -i) }
+            val dateStr = dateFormat.format(cal.time)
+            val dayName = dayFormat.format(cal.time)
+
+            val waterForDay = allWaterLogs.filter { it.dateString == dateStr }.sumOf { it.amountMl }
+            val medsForDay = allMedLogs.filter { it.dateString == dateStr }
+            val takenForDay = medsForDay.count { it.status == "TAKEN" }
+            val totalForDay = maxOf(1, medsForDay.size)
+            val pct = if (medsForDay.isEmpty()) 100 else ((takenForDay.toFloat() / totalForDay.toFloat()) * 100).toInt()
+
+            list.add(Triple(dayName, waterForDay, pct))
+        }
+        list
+    }
+
     val totalWater7Days = allWaterLogs.sumOf { it.amountMl }
-    val avgWaterMl = if (allWaterLogs.isNotEmpty()) totalWater7Days / 7 else 0
-    val takenMedsCount = allMedLogs.count { it.status == "TAKEN" }
-    val totalMedsLogged = allMedLogs.size
-    val adherenceRate = if (totalMedsLogged > 0) (takenMedsCount * 100) / totalMedsLogged else 100
+    val avgWaterMl = if (past7Days.isNotEmpty()) past7Days.map { it.second }.average().toInt() else 0
+    val adherenceRate = if (past7Days.isNotEmpty()) past7Days.map { it.third }.average().toInt() else 100
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag("weekly_summary_card"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = DarkCard),
         border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
-            Text(
-                text = "WEEKLY HEALTH INSIGHTS",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp
-                ),
-                color = SuccessEmerald
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.weekly_health_insights),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp
+                    ),
+                    color = SuccessEmerald
+                )
+
+                Button(
+                    onClick = onReviewHistory,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkSurface, contentColor = PillViolet),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder),
+                    modifier = Modifier.testTag("review_7day_history_btn")
+                ) {
+                    Icon(imageVector = Icons.Default.History, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(text = stringResource(R.string.review_7day_history), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -664,7 +722,7 @@ fun WeeklySummaryCard(
                         color = TextPrimary
                     )
                     Text(
-                        text = "Med Adherence",
+                        text = stringResource(R.string.med_adherence),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -676,9 +734,77 @@ fun WeeklySummaryCard(
                         color = HydrationCyan
                     )
                     Text(
-                        text = "Avg Daily Water",
+                        text = stringResource(R.string.avg_daily_water),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Custom Compose Canvas Drawing for Visual Trends
+            Text(
+                text = stringResource(R.string.visual_trends_title),
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+                color = TextMuted
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val hydCyan = HydrationCyan
+            val pillViolet = PillViolet
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(DarkSurface)
+                    .padding(12.dp)
+            ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val width = size.width
+                    val height = size.height
+                    val barWidth = width / 18f
+                    val spacing = (width - (barWidth * 7)) / 8f
+
+                    past7Days.forEachIndexed { index, (_, water, pct) ->
+                        val left = spacing + index * (barWidth + spacing)
+                        val maxWater = 3000f // 3L scale
+                        val waterRatio = (water.toFloat() / maxWater).coerceIn(0f, 1f)
+                        val barHeight = waterRatio * (height - 30f)
+
+                        // Water Bar (Cyan)
+                        drawRect(
+                            color = hydCyan.copy(alpha = 0.7f),
+                            topLeft = Offset(left, height - 20f - barHeight),
+                            size = Size(barWidth, barHeight)
+                        )
+
+                        // Adherence Dot (Violet)
+                        val dotY = height - 20f - (pct / 100f * (height - 30f))
+                        drawCircle(
+                            color = pillViolet,
+                            radius = 4.dp.toPx(),
+                            center = Offset(left + barWidth / 2f, dotY)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                past7Days.forEach { (day, _, _) ->
+                    Text(
+                        text = day,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = TextSecondary,
+                        fontSize = 10.sp
                     )
                 }
             }
@@ -1011,80 +1137,105 @@ fun WaterCounterComponent(
                 }
             }
 
-            // Beautiful Large Circular Wave Log Button (1-Tap Primary Control)
+            val isGoalMet = waterSumMl >= waterGoalMl && waterGoalMl > 0
+            val ringColor by animateColorAsState(
+                targetValue = if (isGoalMet) SuccessEmerald else HydrationCyan,
+                animationSpec = tween(500),
+                label = "WaterRingColor"
+            )
+
+            // Animated Circular Progress Indicator Container
             Box(
                 modifier = Modifier
-                    .size(180.dp)
-                    .graphicsLayer {
-                        scaleX = waterScale
-                        scaleY = waterScale
-                    }
-                    .clip(CircleShape)
-                    .background(DarkSurface)
-                    .border(1.5.dp, waterColor.copy(alpha = 0.4f), CircleShape)
-                    .clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        isSuccessWater = true
-                        onLogWater(250)
-                        coroutineScope.launch {
-                            delay(600)
-                            isSuccessWater = false
-                        }
-                    }
-                    .testTag("counter_increment_btn"),
+                    .size(200.dp)
+                    .testTag("circular_water_progress_container"),
                 contentAlignment = Alignment.Center
             ) {
-                // Wave Animation Fill representation using Canvas
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val width = size.width
-                    val height = size.height
-                    val levelY = height * (1f - animatedWaterRatio)
+                // Animated Circular Progress Indicator Ring around the interactive wave button
+                androidx.compose.material3.CircularProgressIndicator(
+                    progress = { animatedWaterRatio },
+                    modifier = Modifier.size(200.dp),
+                    color = ringColor,
+                    strokeWidth = 10.dp,
+                    trackColor = DarkCardBorder,
+                    strokeCap = StrokeCap.Round
+                )
 
-                    val wavePath = androidx.compose.ui.graphics.Path()
-                    wavePath.moveTo(0f, height)
-                    wavePath.lineTo(0f, levelY)
+                // Interactive Circular Wave Log Button (1-Tap Primary Control)
+                Box(
+                    modifier = Modifier
+                        .size(174.dp)
+                        .graphicsLayer {
+                            scaleX = waterScale
+                            scaleY = waterScale
+                        }
+                        .clip(CircleShape)
+                        .background(DarkSurface)
+                        .border(1.5.dp, ringColor.copy(alpha = 0.4f), CircleShape)
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            isSuccessWater = true
+                            onLogWater(250)
+                            coroutineScope.launch {
+                                delay(600)
+                                isSuccessWater = false
+                            }
+                        }
+                        .testTag("counter_increment_btn"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Wave Animation Fill representation using Canvas
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val width = size.width
+                        val height = size.height
+                        val levelY = height * (1f - animatedWaterRatio)
 
-                    // Draw organic smooth wave sloshing based on fill status
-                    val waveCount = 2
-                    val waveHeight = 8.dp.toPx()
-                    for (x in 0..width.toInt()) {
-                        val relativeX = x.toFloat() / width
-                        val angle = relativeX * waveCount * Math.PI * 2
-                        val y = levelY + Math.sin(angle).toFloat() * waveHeight * (1f - animatedWaterRatio) * animatedWaterRatio
-                        wavePath.lineTo(x.toFloat(), y)
+                        val wavePath = androidx.compose.ui.graphics.Path()
+                        wavePath.moveTo(0f, height)
+                        wavePath.lineTo(0f, levelY)
+
+                        // Draw organic smooth wave sloshing based on fill status
+                        val waveCount = 2
+                        val waveHeight = 8.dp.toPx()
+                        for (x in 0..width.toInt()) {
+                            val relativeX = x.toFloat() / width
+                            val angle = relativeX * waveCount * Math.PI * 2
+                            val y = levelY + Math.sin(angle).toFloat() * waveHeight * (1f - animatedWaterRatio) * animatedWaterRatio
+                            wavePath.lineTo(x.toFloat(), y)
+                        }
+
+                        wavePath.lineTo(width, height)
+                        wavePath.close()
+
+                        drawPath(
+                            path = wavePath,
+                            color = ringColor.copy(alpha = 0.25f)
+                        )
                     }
 
-                    wavePath.lineTo(width, height)
-                    wavePath.close()
-
-                    drawPath(
-                        path = wavePath,
-                        color = waterColor.copy(alpha = 0.25f)
-                    )
-                }
-
-                // Inner content displaying state overlay
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = if (isSuccessWater) Icons.Default.Check else Icons.Default.LocalDrink,
-                        contentDescription = null,
-                        tint = waterColor,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = if (isSuccessWater) "Logged! ✓" else "+250 ml",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = "$glassesCount / $targetGlasses glasses",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
-                    )
+                    // Inner content displaying state overlay
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isSuccessWater) Icons.Default.Check else if (isGoalMet) Icons.Default.Check else Icons.Default.LocalDrink,
+                            contentDescription = null,
+                            tint = ringColor,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isSuccessWater) "Logged! ✓" else if (isGoalMet) "Goal Met! 🎉" else "+250 ml",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                            color = if (isGoalMet) SuccessEmerald else TextPrimary
+                        )
+                        Text(
+                            text = "$glassesCount / $targetGlasses glasses",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary
+                        )
+                    }
                 }
             }
 
