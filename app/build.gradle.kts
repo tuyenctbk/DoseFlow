@@ -26,8 +26,8 @@ android {
     applicationId = "com.soloprono.doseflow"
     minSdk = 26
     targetSdk = 36
-    versionCode = 7
-    versionName = "1.6"
+    versionCode = 11
+    versionName = "2.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
