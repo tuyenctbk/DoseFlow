@@ -1,20 +1,76 @@
-*.iml
-.gradle
-.kotlin
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-.env
-debug.keystore
-*.jks
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
 
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+build/
+/build
+*/build/
+
+# Gradle files
+.gradle/
+buildOutputCleanup/
+gradle_home/
+
+# Kotlin
+.kotlin/
+
+# Local configuration file (sdk path, secrets, keys, etc)
+local.properties
+/local.properties
+.env
+.env.local
+.env.*.local
+
+# Keystore files & Signing
+*.jks
+*.keystore
+debug.keystore
+common_release_key.jks
+
+# Android Studio / IntelliJ IDEA
+*.iml
+.idea/
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/tasks.xml
+.idea/compiler.xml
+.idea/misc.xml
+.idea/vcs.xml
+.idea/shelf/
+.idea/jarRepositories.xml
+
+# Visual Studio Code
+.vscode/
+
+# NDK / C++ build
+.externalNativeBuild/
+.cxx/
+
+# Android Studio profiling / captures
+captures/
+/captures
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
