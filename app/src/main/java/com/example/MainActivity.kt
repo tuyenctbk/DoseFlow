@@ -21,18 +21,26 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Watch
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,8 +48,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -74,7 +84,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 
     private val viewModel: DoseFlowViewModel by viewModels()
 
-    private fun checkBiometricUnlock() {
+    private fun checkBiometricUnlock(onSuccess: (() -> Unit)? = null) {
         val executor = androidx.core.content.ContextCompat.getMainExecutor(this)
         val biometricPrompt = androidx.biometric.BiometricPrompt(
             this,
@@ -83,6 +93,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                 override fun onAuthenticationSucceeded(result: androidx.biometric.BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     Toast.makeText(this@MainActivity, "🔓 Biometric Unlocked Successfully", Toast.LENGTH_SHORT).show()
+                    onSuccess?.invoke()
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -98,9 +109,9 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         )
 
         val promptInfo = androidx.biometric.BiometricPrompt.PromptInfo.Builder()
-            .setTitle("DoseFlow Security Locked")
-            .setSubtitle("Authenticate with your fingerprint or face to access health logs")
-            .setNegativeButtonText("Cancel")
+            .setTitle(getString(R.string.security_locked))
+            .setSubtitle(getString(R.string.biometric_prompt_subtitle))
+            .setNegativeButtonText(getString(R.string.cancel))
             .build()
 
         biometricPrompt.authenticate(promptInfo)
@@ -114,6 +125,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         ReminderScheduler.createNotificationChannel(this)
         ReminderScheduler.scheduleWaterGoalCheck(this)
         ReminderScheduler.scheduleWaterIntervalCheck(this)
+        ReminderScheduler.scheduleDailyMedicationCheck(this)
 
         setContent {
             val isDarkTheme by viewModel.isDarkTheme.collectAsStateWithLifecycle()
@@ -130,10 +142,14 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                 val reminderIntervalHours by viewModel.reminderIntervalHours.collectAsStateWithLifecycle()
                 val snoozeMinutes by viewModel.snoozeMinutes.collectAsStateWithLifecycle()
                 val isBiometricLocked by viewModel.isBiometricLocked.collectAsStateWithLifecycle()
+                var isUnlocked by remember { mutableStateOf(!isBiometricLocked) }
 
                 LaunchedEffect(isBiometricLocked) {
                     if (isBiometricLocked) {
-                        checkBiometricUnlock()
+                        isUnlocked = false
+                        checkBiometricUnlock { isUnlocked = true }
+                    } else {
+                        isUnlocked = true
                     }
                 }
 
@@ -151,7 +167,13 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                     }
                 }
 
-                if (!isOnboardingCompleted) {
+                if (isBiometricLocked && !isUnlocked) {
+                    BiometricLockOverlayScreen(
+                        onUnlockRequested = {
+                            checkBiometricUnlock { isUnlocked = true }
+                        }
+                    )
+                } else if (!isOnboardingCompleted) {
                     com.example.ui.screens.OnboardingScreen(
                         onCompleteOnboarding = { viewModel.completeOnboarding() }
                     )
@@ -402,5 +424,62 @@ fun NavItem(
             letterSpacing = 1.2.sp,
             color = color
         )
+    }
+}
+
+@Composable
+fun BiometricLockOverlayScreen(onUnlockRequested: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = "Locked",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = stringResource(R.string.security_locked),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.authenticate_to_continue),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                onClick = onUnlockRequested,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Icon(imageVector = Icons.Default.Fingerprint, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = stringResource(R.string.unlock_doseflow), fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }

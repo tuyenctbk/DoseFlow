@@ -75,6 +75,13 @@ import com.example.ui.theme.SuccessEmerald
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.SaveAlt
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -109,6 +116,21 @@ fun HistoryAndExportScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    val exportDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        if (uri != null && csvString != null) {
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(csvString.toByteArray())
+                }
+                Toast.makeText(context, "CSV exported successfully to document storage!", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to export CSV: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     val unifiedLogs = androidx.compose.runtime.remember(allMedLogs, allWaterLogs) {
         val list = mutableListOf<UnifiedLog>()
         allMedLogs.forEach { list.add(UnifiedLog.Medication(it)) }
@@ -279,14 +301,35 @@ fun HistoryAndExportScreen(
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                         ) {
+                            Button(
+                                onClick = {
+                                    exportDocumentLauncher.launch("doseflow_health_backup.csv")
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = PillViolet,
+                                    contentColor = OledBlack
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.testTag("save_csv_storage_btn")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.SaveAlt,
+                                    contentDescription = "Save",
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(stringResource(R.string.export_csv_file), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
                             Button(
                                 onClick = {
                                     val clipboard =
                                         context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     val clip = ClipData.newPlainText("DoseFlow CSV Export", csvString)
                                     clipboard.setPrimaryClip(clip)
+                                    Toast.makeText(context, "Copied CSV to clipboard", Toast.LENGTH_SHORT).show()
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = DarkSurface,
@@ -301,7 +344,7 @@ fun HistoryAndExportScreen(
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Copy CSV to Clipboard", fontSize = 12.sp)
+                                Text("Copy", fontSize = 11.sp)
                             }
                         }
                     }

@@ -8,13 +8,13 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- DoseFlow Theme Colors (Light Mode) -->
-    <color name="bg_color">#FAFAFE</color>
-    <color name="surface_color">#F1F5F9</color>
-    <color name="card_color">#FFFFFF</color>
-    <color name="card_border">#E2E8F0</color>
-    <color name="text_primary">#0F172A</color>
-    <color name="text_secondary">#475569</color>
+    <!-- DoseFlow Theme Colors (Night Mode) -->
+    <color name="bg_color">#000000</color>
+    <color name="surface_color">#101018</color>
+    <color name="card_color">#1B1B26</color>
+    <color name="card_border">#2C2C3E</color>
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#94A3B8</color>
     <color name="text_muted">#64748B</color>
 
     <!-- Brand Colors -->
