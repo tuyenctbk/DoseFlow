@@ -26,8 +26,8 @@ android {
     applicationId = "com.soloprono.doseflow"
     minSdk = 26
     targetSdk = 36
-    versionCode = 13
-    versionName = "2.3"
+    versionCode = 14
+    versionName = "2.4"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -93,10 +93,10 @@ dependencies {
   implementation(libs.firebase.crashlytics)
   // implementation(libs.accompanist.permissions)
   implementation(libs.androidx.activity.compose)
-  // implementation(libs.androidx.camera.camera2)
-  // implementation(libs.androidx.camera.core)
-  // implementation(libs.androidx.camera.lifecycle)
-  // implementation(libs.androidx.camera.view)
+  implementation(libs.androidx.camera.camera2)
+  implementation(libs.androidx.camera.core)
+  implementation(libs.androidx.camera.lifecycle)
+  implementation(libs.androidx.camera.view)
   implementation(libs.androidx.compose.material.icons.core)
   implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.androidx.compose.material3)
@@ -106,6 +106,7 @@ dependencies {
   implementation(libs.androidx.core.ktx)
   implementation("androidx.work:work-runtime-ktx:2.9.0")
   implementation("androidx.biometric:biometric:1.2.0-alpha05")
+  implementation("com.google.mlkit:barcode-scanning:17.3.0")
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -116,7 +117,7 @@ dependencies {
   implementation(libs.androidx.wear.tiles)
   implementation(libs.androidx.wear.protolayout)
   implementation(libs.androidx.wear.protolayout.material)
-  // implementation(libs.coil.compose)
+  implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)
   // implementation("com.google.firebase:firebase-config")

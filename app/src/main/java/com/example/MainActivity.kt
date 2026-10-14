@@ -146,6 +146,12 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                 val reminderIntervalHours by viewModel.reminderIntervalHours.collectAsStateWithLifecycle()
                 val snoozeMinutes by viewModel.snoozeMinutes.collectAsStateWithLifecycle()
                 val isBiometricLocked by viewModel.isBiometricLocked.collectAsStateWithLifecycle()
+                val drugSearchResults by viewModel.drugSearchResults.collectAsStateWithLifecycle()
+                val isApiSearching by viewModel.isApiSearching.collectAsStateWithLifecycle()
+                val cabinetInteractions by viewModel.cabinetInteractions.collectAsStateWithLifecycle()
+                val selectedPillDetail by viewModel.selectedPillDetail.collectAsStateWithLifecycle()
+                val isSafetyLoading by viewModel.isSafetyLoading.collectAsStateWithLifecycle()
+
                 var isUnlocked by remember { mutableStateOf(!isBiometricLocked) }
 
                 LaunchedEffect(isBiometricLocked) {
@@ -261,12 +267,25 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                                 1 -> MedicationsManagerScreen(
                                     medications = medications,
                                     waterGoalMl = waterGoalMl,
-                                    onSaveMedication = { id, name, dosage, hour, min, freq, stock, color, iconType ->
-                                        viewModel.saveMedication(id, name, dosage, hour, min, freq, stock, color, iconType)
+                                    drugSearchResults = drugSearchResults,
+                                    isSearchingApi = isApiSearching,
+                                    cabinetInteractions = cabinetInteractions,
+                                    selectedPillDetail = selectedPillDetail,
+                                    isSafetyLoading = isSafetyLoading,
+                                    onSaveMedication = { id, name, dosage, hour, min, freq, stock, color, iconType, rxcui, upc, active, visual, foodSummary ->
+                                        viewModel.saveMedication(
+                                            id, name, dosage, hour, min, freq, stock, color, iconType,
+                                            rxcui, upc, active, visual, foodSummary
+                                        )
                                     },
                                     onDeleteMedication = { med -> viewModel.deleteMedication(med) },
                                     onSetWaterGoal = { goal -> viewModel.setWaterGoal(goal) },
-                                    onTestNotification = { med -> viewModel.testSendReminderNotification(med) }
+                                    onTestNotification = { med -> viewModel.testSendReminderNotification(med) },
+                                    onSearchAutoComplete = { query -> viewModel.searchDrugsAutoComplete(query) },
+                                    onLookupBarcode = { code, callback -> viewModel.lookupBarcode(code, callback) },
+                                    onLoadSafetyDetail = { name, rxcui, upc -> viewModel.loadPillDetailAndSafety(name, rxcui, upc) },
+                                    onClearSafetySheet = { viewModel.clearPillSafetySheet() },
+                                    onCheckCabinetInteractions = { viewModel.checkCabinetInteractions() }
                                 )
 
                                 2 -> ReportScreen(

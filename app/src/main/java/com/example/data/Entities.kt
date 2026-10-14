@@ -18,6 +18,11 @@ data class MedicationEntity(
     val colorHex: String = "#8B5CF6",
     val iconType: String = "pill", // "pill", "capsule", "syrup", "injection"
     val isActive: Boolean = true,
+    val rxcui: String? = null,
+    val upcOrBarcode: String? = null,
+    val activeIngredients: String? = null,
+    val visualDescription: String? = null,
+    val foodWarningsSummary: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
 

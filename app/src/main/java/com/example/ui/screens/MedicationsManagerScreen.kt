@@ -1,19 +1,10 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -23,60 +14,77 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.MedicationEntity
+import com.example.data.api.DrugInteractionResult
+import com.example.data.api.DrugSearchResult
+import com.example.data.api.PillDetailInfo
+import com.example.ui.components.BarcodeScannerModal
+import com.example.ui.components.PillSafetySheet
 import com.example.ui.theme.DarkCard
 import com.example.ui.theme.DarkCardBorder
 import com.example.ui.theme.DarkSurface
 import com.example.ui.theme.HydrationCyan
 import com.example.ui.theme.OledBlack
 import com.example.ui.theme.PillViolet
+import com.example.ui.theme.SuccessEmerald
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.theme.WarningAmber
 
 @Composable
 fun MedicationsManagerScreen(
     medications: List<MedicationEntity>,
     waterGoalMl: Int,
-    onSaveMedication: (id: Long, name: String, dosage: String, hour: Int, min: Int, freq: String, stock: Int, color: String, iconType: String) -> Unit,
+    drugSearchResults: List<DrugSearchResult>,
+    isSearchingApi: Boolean,
+    cabinetInteractions: List<DrugInteractionResult>,
+    selectedPillDetail: PillDetailInfo?,
+    isSafetyLoading: Boolean,
+    onSaveMedication: (
+        id: Long, name: String, dosage: String, hour: Int, min: Int, freq: String,
+        stock: Int, color: String, iconType: String, rxcui: String?, upcOrBarcode: String?,
+        activeIngredients: String?, visualDescription: String?, foodWarningsSummary: String?
+    ) -> Unit,
     onDeleteMedication: (MedicationEntity) -> Unit,
     onSetWaterGoal: (Int) -> Unit,
     onTestNotification: (MedicationEntity) -> Unit,
+    onSearchAutoComplete: (String) -> Unit,
+    onLookupBarcode: (String, (PillDetailInfo) -> Unit) -> Unit,
+    onLoadSafetyDetail: (String, String?, String?) -> Unit,
+    onClearSafetySheet: () -> Unit,
+    onCheckCabinetInteractions: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var editingMed by remember { mutableStateOf<MedicationEntity?>(null) }
     var showWaterGoalDialog by remember { mutableStateOf(false) }
+    var showBarcodeScanner by remember { mutableStateOf(false) }
+    var showSafetySheet by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        onCheckCabinetInteractions()
+    }
 
     LazyColumn(
         modifier = modifier
@@ -122,6 +130,82 @@ fun MedicationsManagerScreen(
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(text = "New Pill", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // Cabinet Drug Interactions Radar Card
+        if (cabinetInteractions.isNotEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("cabinet_interaction_radar"),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1219)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.HealthAndSafety,
+                                    contentDescription = null,
+                                    tint = Color(0xFFEF4444),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Cabinet Drug Interactions Warning",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White
+                                )
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFFEF4444).copy(alpha = 0.2f)
+                            ) {
+                                Text(
+                                    text = "${cabinetInteractions.size} ALERT",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFFEF4444),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = cabinetInteractions.first().description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextMuted
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        TextButton(
+                            onClick = {
+                                val firstMed = medications.firstOrNull { it.name == cabinetInteractions.first().drug1Name }
+                                onLoadSafetyDetail(
+                                    cabinetInteractions.first().drug1Name,
+                                    firstMed?.rxcui,
+                                    firstMed?.upcOrBarcode
+                                )
+                                showSafetySheet = true
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = HydrationCyan),
+                            modifier = Modifier.testTag("view_interaction_details_btn")
+                        ) {
+                            Text(stringResource(R.string.view_safety_analysis), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
                 }
             }
         }
@@ -181,14 +265,29 @@ fun MedicationsManagerScreen(
         }
 
         item {
-            Text(
-                text = "ACTIVE MEDICATION SCHEDULES",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp
-                ),
-                color = TextSecondary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "ACTIVE MEDICATION SCHEDULES",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp
+                    ),
+                    color = TextSecondary
+                )
+
+                IconButton(onClick = { showBarcodeScanner = true }) {
+                    Icon(
+                        imageVector = Icons.Default.QrCodeScanner,
+                        contentDescription = "Barcode Scan",
+                        tint = HydrationCyan,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
         }
 
         if (medications.isEmpty()) {
@@ -225,38 +324,56 @@ fun MedicationsManagerScreen(
 
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "No Medication Schedules",
+                                text = stringResource(R.string.no_medication_schedules),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = TextPrimary
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Add your daily pills, vitamins, or supplements to set alarms and track doses effortlessly.",
+                                text = stringResource(R.string.no_meds_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
                         }
 
-                        Button(
-                            onClick = {
-                                editingMed = null
-                                showAddDialog = true
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PillViolet,
-                                contentColor = OledBlack
-                            ),
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.testTag("empty_add_med_btn")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Add Your First Medication", fontWeight = FontWeight.Bold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = {
+                                    editingMed = null
+                                    showAddDialog = true
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = PillViolet,
+                                    contentColor = OledBlack
+                                ),
+                                shape = RoundedCornerShape(14.dp),
+                                modifier = Modifier.testTag("empty_add_med_btn")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(stringResource(R.string.add_pill), fontWeight = FontWeight.Bold)
+                            }
+
+                            OutlinedButton(
+                                onClick = { showBarcodeScanner = true },
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = HydrationCyan),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, HydrationCyan),
+                                modifier = Modifier.testTag("empty_scan_barcode_btn")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.QrCodeScanner,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(stringResource(R.string.scan_barcode), fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
@@ -298,6 +415,17 @@ fun MedicationsManagerScreen(
                             }
 
                             Row {
+                                IconButton(onClick = {
+                                    onLoadSafetyDetail(med.name, med.rxcui, med.upcOrBarcode)
+                                    showSafetySheet = true
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.HealthAndSafety,
+                                        contentDescription = "Safety Details",
+                                        tint = WarningAmber,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                                 IconButton(onClick = { onTestNotification(med) }) {
                                     Icon(
                                         imageVector = Icons.Default.NotificationsActive,
@@ -336,14 +464,25 @@ fun MedicationsManagerScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Alarm: ${String.format("%02d:%02d", med.timeHour, med.timeMinute)}",
+                                text = stringResource(R.string.alarm_time_format, med.timeHour, med.timeMinute),
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                 color = PillViolet
                             )
                             Text(
-                                text = "Remaining Stock: ${med.stockRemaining} doses",
+                                text = stringResource(R.string.stock_doses_format, med.stockRemaining),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (med.stockRemaining < 5) MaterialTheme.colorScheme.error else TextMuted
+                            )
+                        }
+
+                        if (!med.activeIngredients.isNullOrEmpty() || !med.foodWarningsSummary.isNullOrEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Divider(color = DarkCardBorder)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = stringResource(R.string.fda_notes_format, med.activeIngredients ?: stringResource(R.string.rxnorm_verified)),
+                                fontSize = 11.sp,
+                                color = HydrationCyan
                             )
                         }
                     }
@@ -356,16 +495,47 @@ fun MedicationsManagerScreen(
         }
     }
 
+    // Barcode Scanner Dialog
+    if (showBarcodeScanner) {
+        BarcodeScannerModal(
+            onDismissRequest = { showBarcodeScanner = false },
+            onBarcodeDetected = { barcode ->
+                onLookupBarcode(barcode) { detail ->
+                    editingMed = null
+                    showAddDialog = true
+                }
+            }
+        )
+    }
+
+    // Safety & Interactions Bottom Sheet
+    if (showSafetySheet) {
+        PillSafetySheet(
+            pillDetail = selectedPillDetail,
+            cabinetInteractions = cabinetInteractions,
+            isLoading = isSafetyLoading,
+            onDismiss = {
+                showSafetySheet = false
+                onClearSafetySheet()
+            }
+        )
+    }
+
     // Add / Edit Medication Dialog
     if (showAddDialog) {
-        var name by remember { mutableStateOf(editingMed?.name ?: "") }
-        var dosage by remember { mutableStateOf(editingMed?.dosage ?: "1 Pill") }
+        var name by remember { mutableStateOf(editingMed?.name ?: selectedPillDetail?.name ?: "") }
+        var dosage by remember { mutableStateOf(editingMed?.dosage ?: selectedPillDetail?.dosageGuidance?.take(20) ?: "1 Pill") }
         var hourStr by remember { mutableStateOf((editingMed?.timeHour ?: 8).toString()) }
         var minStr by remember { mutableStateOf((editingMed?.timeMinute ?: 0).toString()) }
         var stockStr by remember { mutableStateOf((editingMed?.stockRemaining ?: 30).toString()) }
         var freq by remember { mutableStateOf(editingMed?.frequency ?: "DAILY") }
         var selectedColor by remember { mutableStateOf(editingMed?.colorHex ?: "#8B5CF6") }
         var selectedIcon by remember { mutableStateOf(editingMed?.iconType ?: "pill") }
+        var currentRxcui by remember { mutableStateOf(editingMed?.rxcui ?: selectedPillDetail?.rxcui) }
+        var currentUpc by remember { mutableStateOf(editingMed?.upcOrBarcode ?: selectedPillDetail?.upcOrNdc) }
+        var currentActive by remember { mutableStateOf(editingMed?.activeIngredients ?: selectedPillDetail?.activeIngredients) }
+        var currentVisual by remember { mutableStateOf(editingMed?.visualDescription ?: selectedPillDetail?.visualDescription) }
+
         var hasError by remember { mutableStateOf(false) }
 
         AlertDialog(
@@ -374,36 +544,111 @@ fun MedicationsManagerScreen(
             titleContentColor = TextPrimary,
             textContentColor = TextSecondary,
             title = {
-                Text(
-                    text = if (editingMed == null) "Schedule New Medication" else "Edit Schedule",
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (editingMed == null) "Schedule New Medication" else "Edit Schedule",
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    IconButton(onClick = { showBarcodeScanner = true }) {
+                        Icon(
+                            imageVector = Icons.Default.QrCodeScanner,
+                            contentDescription = "Scan Barcode",
+                            tint = HydrationCyan
+                        )
+                    }
+                }
             },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = {
-                            name = it
-                            if (it.isNotBlank()) hasError = false
-                        },
-                        isError = hasError,
-                        label = { Text("Medication / Supplement Name *") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PillViolet,
-                            unfocusedBorderColor = DarkCardBorder,
-                            errorBorderColor = MaterialTheme.colorScheme.error
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("med_name_input")
-                    )
+                    // Name Field with Auto-Complete Dropdown
+                    Column {
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = {
+                                name = it
+                                if (it.isNotBlank()) {
+                                    hasError = false
+                                    onSearchAutoComplete(it)
+                                }
+                            },
+                            isError = hasError,
+                            label = { Text(stringResource(R.string.medication_pill_name_req)) },
+                            placeholder = { Text(stringResource(R.string.search_medication_placeholder)) },
+                            trailingIcon = {
+                                if (isSearchingApi) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        color = PillViolet,
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = PillViolet,
+                                unfocusedBorderColor = DarkCardBorder,
+                                errorBorderColor = MaterialTheme.colorScheme.error
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("med_name_input")
+                        )
+
+                        // Auto-complete Suggestions Dropdown
+                        if (drugSearchResults.isNotEmpty() && name.length >= 2) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = DarkSurface,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 160.dp)
+                                    .padding(top = 4.dp)
+                            ) {
+                                LazyColumn {
+                                    items(drugSearchResults) { result ->
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    name = result.name
+                                                    currentRxcui = result.rxcui
+                                                    currentActive = result.activeIngredient ?: result.genericName
+                                                    onSearchAutoComplete("") // Clear suggestions
+                                                }
+                                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = result.name,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = TextPrimary
+                                            )
+                                            if (!result.activeIngredient.isNullOrEmpty()) {
+                                                Text(
+                                                    text = stringResource(R.string.active_ingredient_format, result.activeIngredient),
+                                                    fontSize = 10.sp,
+                                                    color = TextMuted
+                                                )
+                                            }
+                                        }
+                                        Divider(color = DarkCardBorder.copy(alpha = 0.5f))
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if (hasError) {
                         Text(
-                            text = "Please enter a medication or supplement name",
+                            text = stringResource(R.string.enter_or_select_med_error),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -412,7 +657,7 @@ fun MedicationsManagerScreen(
                     OutlinedTextField(
                         value = dosage,
                         onValueChange = { dosage = it },
-                        label = { Text("Dosage (e.g. 1 Pill, 500mg)") },
+                        label = { Text(stringResource(R.string.dosage_placeholder_label)) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PillViolet,
                             unfocusedBorderColor = DarkCardBorder
@@ -452,7 +697,7 @@ fun MedicationsManagerScreen(
                         OutlinedTextField(
                             value = hourStr,
                             onValueChange = { hourStr = it },
-                            label = { Text("Hour (0-23)") },
+                            label = { Text(stringResource(R.string.hour_label)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier
                                 .weight(1f)
@@ -465,7 +710,7 @@ fun MedicationsManagerScreen(
                         OutlinedTextField(
                             value = minStr,
                             onValueChange = { minStr = it },
-                            label = { Text("Minute (0-59)") },
+                            label = { Text(stringResource(R.string.minute_label)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier
                                 .weight(1f)
@@ -477,44 +722,10 @@ fun MedicationsManagerScreen(
                         )
                     }
 
-                    // Quick time presets
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        listOf(
-                            "08:00" to (8 to 0),
-                            "12:30" to (12 to 30),
-                            "18:00" to (18 to 0),
-                            "21:00" to (21 to 0)
-                        ).forEach { (label, time) ->
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(DarkSurface)
-                                    .border(1.dp, DarkCardBorder, RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        hourStr = time.first.toString()
-                                        minStr = time.second.toString()
-                                    }
-                                    .padding(vertical = 6.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = label,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = HydrationCyan
-                                )
-                            }
-                        }
-                    }
-
                     OutlinedTextField(
                         value = stockStr,
                         onValueChange = { stockStr = it },
-                        label = { Text("Initial Stock Count") },
+                        label = { Text(stringResource(R.string.initial_stock_count)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PillViolet,
@@ -525,7 +736,7 @@ fun MedicationsManagerScreen(
                             .testTag("med_stock_input")
                     )
 
-                    Text("Frequency", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                    Text(stringResource(R.string.frequency_label), style = MaterialTheme.typography.labelMedium, color = TextSecondary)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -556,30 +767,6 @@ fun MedicationsManagerScreen(
                             }
                         }
                     }
-
-                    Text("Color Theme", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val colors = listOf("#8B5CF6", "#06B6D4", "#10B981", "#F59E0B", "#F43F5E", "#3B82F6")
-                        colors.forEach { hex ->
-                            val isSelected = selectedColor.equals(hex, ignoreCase = true)
-                            val parsedColor = try {
-                                Color(android.graphics.Color.parseColor(hex))
-                            } catch (e: Exception) {
-                                PillViolet
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(parsedColor)
-                                    .border(if (isSelected) 3.dp else 1.dp, if (isSelected) Color.White else DarkCardBorder, CircleShape)
-                                    .clickable { selectedColor = hex }
-                            )
-                        }
-                    }
                 }
             },
             confirmButton = {
@@ -599,7 +786,12 @@ fun MedicationsManagerScreen(
                                 freq,
                                 s,
                                 selectedColor,
-                                selectedIcon
+                                selectedIcon,
+                                currentRxcui,
+                                currentUpc,
+                                currentActive,
+                                currentVisual,
+                                null
                             )
                             showAddDialog = false
                         } else {
@@ -609,12 +801,12 @@ fun MedicationsManagerScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = PillViolet, contentColor = OledBlack),
                     modifier = Modifier.testTag("save_med_btn")
                 ) {
-                    Text("Save Schedule", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.save_schedule), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
-                    Text("Cancel", color = TextMuted)
+                    Text(stringResource(R.string.cancel), color = TextMuted)
                 }
             }
         )
@@ -628,12 +820,12 @@ fun MedicationsManagerScreen(
             onDismissRequest = { showWaterGoalDialog = false },
             containerColor = DarkCard,
             titleContentColor = TextPrimary,
-            title = { Text("Set Daily Hydration Goal (ml)") },
+            title = { Text(stringResource(R.string.set_daily_hydration_goal)) },
             text = {
                 OutlinedTextField(
                     value = goalInput,
                     onValueChange = { goalInput = it },
-                    label = { Text("Daily Water Goal in ml") },
+                    label = { Text(stringResource(R.string.daily_water_goal_in_ml)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = HydrationCyan,
@@ -654,12 +846,12 @@ fun MedicationsManagerScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = HydrationCyan, contentColor = OledBlack),
                     modifier = Modifier.testTag("save_water_goal_btn")
                 ) {
-                    Text("Save Goal", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.save_goal), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showWaterGoalDialog = false }) {
-                    Text("Cancel", color = TextMuted)
+                    Text(stringResource(R.string.cancel), color = TextMuted)
                 }
             }
         )

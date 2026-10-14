@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">DoseFlow</string>
     <string name="nav_today">Hoy</string>
@@ -39,7 +40,6 @@
     <string name="resets_daily">Se reinicia diariamente 🌙</string>
     <string name="low_stock_reminder">RECORDATORIO DE STOCK BAJO</string>
     <string name="todays_scheduled_doses">DOSIS PROGRAMADAS PARA HOY</string>
-
     <string name="review_7day_history">Revisar Historial de 7 Días</string>
     <string name="historical_medication_logs">Historial de Medicamentos</string>
     <string name="past_7_days_adherence">Registros de adherencia de los últimos 7 días</string>
@@ -69,4 +69,59 @@
     <string name="back_up_json">Respaldar JSON</string>
     <string name="restore_json">Restaurar JSON</string>
     <string name="revisit_welcome_onboarding">Revisar Guía Inicial</string>
+    <string name="tile_description" translatable="false">Displays the current day\'s adherence summary.</string>
+    <string name="pill_drug_safety">Seguridad de Medicamentos y Píldoras</string>
+    <string name="powered_by_nih_openfda">Impulsado por API de NIH RxNav y OpenFDA</string>
+    <string name="rxnorm_verified">Verificado por RxNorm</string>
+    <string name="checking_interactions_fda">Verificando interacciones en NIH RxNav y etiquetas FDA...</string>
+    <string name="food_dietary_warnings">ADVERTENCIAS ALIMENTARIAS Y DIETÉTICAS</string>
+    <string name="cabinet_drug_interactions">CABINET DRUG INTERACTIONS (%1$d)</string>
+    <string name="no_high_risk_interactions">Sin interacciones de alto riesgo</string>
+    <string name="no_interactions_desc">NIH RxNav analizó sus medicamentos activos y no encontró interacciones peligrosas.</string>
+    <string name="official_pill_description_fda">DESCRIPCIÓN VISUAL OFICIAL Y DATOS FDA</string>
+    <string name="tablet_capsule_appearance">Apariencia de la Tableta o Cápsula</string>
+    <string name="default_fda_visual_desc">Registro verificado por la FDA. Verifique los grabados en la caja.</string>
+    <string name="active_ingredients_label">Active Ingredients: %1$s</string>
+    <string name="rxcui_concept_id">RxCUI Concept ID: %1$s</string>
+    <string name="high_risk">ALTO RIESGO</string>
+    <string name="moderate_risk">RIESGO MODERADO</string>
+    <string name="align_barcode_frame">Alinee el código de barras o NDC en el marco</string>
+    <string name="scans_upc_ean_ndc">Escanea códigos UPC, EAN o NDC del paquete automáticamente</string>
+    <string name="lookup_medication_barcode">Buscar Código de Barras / NDC</string>
+    <string name="type_upc_ndc_desc">Escriba cualquier código UPC o número NDC para obtener registros de la FDA.</string>
+    <string name="upc_or_ndc_label">Código UPC o Número NDC</string>
+    <string name="upc_placeholder">ej. 03001234567</string>
+    <string name="find_medication">Buscar Medicamento</string>
+    <string name="camera_scan">Escanear Cámara</string>
+    <string name="type_code">Escribir Código</string>
+    <string name="no_medication_schedules">Sin Horarios de Medicamentos</string>
+    <string name="no_meds_desc">Escanee códigos de barras o escriba nombres para agregar horarios con revisiones de seguridad.</string>
+    <string name="add_pill">Agregar Píldora</string>
+    <string name="scan_barcode">Escanear Código</string>
+    <string name="view_safety_analysis">Ver Análisis Completo de Seguridad NIH RxNav →</string>
+    <string name="alarm_time_format">Alarm: %1$02d:%2$02d</string>
+    <string name="stock_doses_format">Stock: %1$d doses</string>
+    <string name="fda_notes_format">FDA Notes: %1$s</string>
+    <string name="medication_pill_name_req">Nombre del Medicamento *</string>
+    <string name="search_medication_placeholder">Buscar ej. Aspirina, Lisinopril</string>
+    <string name="enter_or_select_med_error">Ingrese o seleccione un nombre de medicamento</string>
+    <string name="dosage_placeholder_label">Dosis (ej. 1 Píldora, 500mg)</string>
+    <string name="hour_label">Hora (0-23)</string>
+    <string name="minute_label">Minuto (0-59)</string>
+    <string name="initial_stock_count">Cantidad de Inventario Inicial</string>
+    <string name="frequency_label">Frecuencia</string>
+    <string name="save_schedule">Guardar Horario</string>
+    <string name="set_daily_hydration_goal">Establecer Meta Diaria de Hidratación (ml)</string>
+    <string name="daily_water_goal_in_ml">Meta Diaria de Agua en ml</string>
+    <string name="save_goal">Guardar Meta</string>
+    <string name="add_first_medication">Agregar Primer Medicamento</string>
+    <string name="add_quick">+ Agregar</string>
+    <string name="active_ingredient_format">Active: %1$s</string>
+    <string name="grant_notification_permission">Conceder Permiso de Notificación</string>
+    <string name="copy">Copiar</string>
+    <string name="select">Seleccionar</string>
+    <string name="delete">Eliminar</string>
+    <string name="save">Guardar</string>
+    <string name="import_restore_data">Importar y Restaurar Datos</string>
+    <string name="json_import_placeholder">{"medications": [...], "medicationLogs": [...], "waterLogs": [...]}</string>
 </resources>

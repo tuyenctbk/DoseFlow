@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">DoseFlow</string>
     <string name="tile_description" translatable="false">Displays the current day\'s adherence summary.</string>
@@ -40,7 +41,6 @@
     <string name="resets_daily">Resets Daily 🌙</string>
     <string name="low_stock_reminder">LOW PILL STOCK REMINDER</string>
     <string name="todays_scheduled_doses">TODAY\'S SCHEDULED DOSES</string>
-
     <string name="review_7day_history">Review 7-Day History</string>
     <string name="historical_medication_logs">Historical Medication Logs</string>
     <string name="past_7_days_adherence">Past 7 days adherence records from database</string>
@@ -70,4 +70,58 @@
     <string name="back_up_json">Back Up JSON</string>
     <string name="restore_json">Restore JSON</string>
     <string name="revisit_welcome_onboarding">Revisit Welcome Onboarding</string>
+    <string name="pill_drug_safety">Pill &amp; Drug Safety</string>
+    <string name="powered_by_nih_openfda">Powered by NIH RxNav &amp; OpenFDA APIs</string>
+    <string name="rxnorm_verified">RxNorm Verified</string>
+    <string name="checking_interactions_fda">Checking NIH RxNav interactions &amp; FDA labels…</string>
+    <string name="food_dietary_warnings">FOOD &amp; DIETARY WARNINGS</string>
+    <string name="cabinet_drug_interactions">CABINET DRUG INTERACTIONS (%1$d)</string>
+    <string name="no_high_risk_interactions">No High-Risk Cabinet Interactions</string>
+    <string name="no_interactions_desc">NIH RxNav scanned active medications and found no dangerous interactions.</string>
+    <string name="official_pill_description_fda">OFFICIAL PILL VISUAL DESCRIPTION &amp; FDA DATA</string>
+    <string name="tablet_capsule_appearance">Tablet &amp; Capsule Appearance</string>
+    <string name="default_fda_visual_desc">Verified FDA listing. Check prescription box for tablet imprints.</string>
+    <string name="active_ingredients_label">Active Ingredients: %1$s</string>
+    <string name="rxcui_concept_id">RxCUI Concept ID: %1$s</string>
+    <string name="high_risk">HIGH RISK</string>
+    <string name="moderate_risk">MODERATE RISK</string>
+    <string name="align_barcode_frame">Align Drug Barcode or NDC within Frame</string>
+    <string name="scans_upc_ean_ndc">Scans UPC, EAN, or Package NDC codes automatically</string>
+    <string name="lookup_medication_barcode">Lookup Medication Barcode / NDC</string>
+    <string name="type_upc_ndc_desc">Type any UPC code or NDC number (e.g. 00030012345 or 300021401) to fetch official OpenFDA pill records.</string>
+    <string name="upc_or_ndc_label">UPC Barcode or NDC Number</string>
+    <string name="upc_placeholder">e.g. 03001234567</string>
+    <string name="find_medication">Find Medication</string>
+    <string name="camera_scan">Camera Scan</string>
+    <string name="type_code">Type Code</string>
+    <string name="no_medication_schedules">No Medication Schedules</string>
+    <string name="no_meds_desc">Scan drug barcodes or type pill names to add schedules with instant NIH RxNav &amp; FDA safety checks.</string>
+    <string name="add_pill">Add Pill</string>
+    <string name="scan_barcode">Scan Barcode</string>
+    <string name="view_safety_analysis">View Full NIH RxNav Safety Analysis →</string>
+    <string name="alarm_time_format">Alarm: %1$02d:%2$02d</string>
+    <string name="stock_doses_format">Stock: %1$d doses</string>
+    <string name="fda_notes_format">FDA Notes: %1$s</string>
+    <string name="medication_pill_name_req">Medication / Pill Name *</string>
+    <string name="search_medication_placeholder">Search e.g. Aspirin, Lisinopril</string>
+    <string name="enter_or_select_med_error">Please enter or select a medication name</string>
+    <string name="dosage_placeholder_label">Dosage (e.g. 1 Pill, 500mg)</string>
+    <string name="hour_label">Hour (0-23)</string>
+    <string name="minute_label">Minute (0-59)</string>
+    <string name="initial_stock_count">Initial Stock Count</string>
+    <string name="frequency_label">Frequency</string>
+    <string name="save_schedule">Save Schedule</string>
+    <string name="set_daily_hydration_goal">Set Daily Hydration Goal (ml)</string>
+    <string name="daily_water_goal_in_ml">Daily Water Goal in ml</string>
+    <string name="save_goal">Save Goal</string>
+    <string name="add_first_medication">Add First Medication</string>
+    <string name="add_quick">+ Add</string>
+    <string name="active_ingredient_format">Active: %1$s</string>
+    <string name="grant_notification_permission">Grant Notification Permission</string>
+    <string name="copy">Copy</string>
+    <string name="select">Select</string>
+    <string name="delete">Delete</string>
+    <string name="save">Save</string>
+    <string name="import_restore_data">Import &amp; Restore Data</string>
+    <string name="json_import_placeholder">{\"medications\": [...], \"medicationLogs\": [...], \"waterLogs\": [...]}</string>
 </resources>
