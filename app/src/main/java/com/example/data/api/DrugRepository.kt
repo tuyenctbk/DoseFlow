@@ -54,11 +54,11 @@ object DrugRepository {
             val rxDrugs = rxNavService.getDrugsByName(cleanQuery)
             rxDrugs.drugGroup?.conceptGroup?.forEach { group ->
                 group.conceptProperties?.forEach { prop ->
-                    if (!prop.name.isNull_or_empty()) {
+                    if (!prop.name.isNullOrBlank()) {
                         results.add(
                             DrugSearchResult(
                                 rxcui = prop.rxcui,
-                                name = prop.name!!,
+                                name = prop.name,
                                 brandName = if (group.tty == "SBD" || group.tty == "BN") prop.name else null,
                                 genericName = if (group.tty == "SCD" || group.tty == "IN") prop.name else null,
                                 dosageForm = group.tty
@@ -425,7 +425,8 @@ object DrugRepository {
         interactions: MutableList<DrugInteractionResult>
     ) {
         fun containsMed(query: String) = namesLower.any { it.contains(query) }
-        fun getRealName(query: String) = medications.firstOrNull { it.first.lowercase().contains(query) }?.first ?: query.capitalize()
+        fun getRealName(query: String) = medications.firstOrNull { it.first.lowercase().contains(query) }?.first
+            ?: query.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }
 
         // Aspirin + Warfarin / Blood Thinners
         if ((containsMed("aspirin") || containsMed("ibuprofen") || containsMed("naproxen")) &&
@@ -478,5 +479,3 @@ object DrugRepository {
         }
     }
 }
-
-private fun String?.isNull_or_empty(): Boolean = this == null || this.trim().isEmpty()

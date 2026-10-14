@@ -6,6 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,6 +54,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -414,15 +420,36 @@ fun NavItem(
     onClick: () -> Unit,
     testTag: String
 ) {
-    val color = if (isSelected) activeColor else TextMuted
-    val containerBg = if (isSelected) activeColor.copy(alpha = 0.15f) else Color.Transparent
+    val haptic = LocalHapticFeedback.current
+    val color by animateColorAsState(
+        targetValue = if (isSelected) activeColor else TextMuted,
+        animationSpec = spring(stiffness = 500f),
+        label = "nav_color"
+    )
+    val containerBg by animateColorAsState(
+        targetValue = if (isSelected) activeColor.copy(alpha = 0.16f) else Color.Transparent,
+        animationSpec = spring(stiffness = 500f),
+        label = "nav_bg"
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.06f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 600f),
+        label = "nav_scale"
+    )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(RoundedCornerShape(14.dp))
             .background(containerBg)
-            .clickable { onClick() }
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .testTag(testTag)
     ) {

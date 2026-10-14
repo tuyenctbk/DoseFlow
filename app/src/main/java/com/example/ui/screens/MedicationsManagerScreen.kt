@@ -1,6 +1,12 @@
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -137,13 +143,23 @@ fun MedicationsManagerScreen(
         // Cabinet Drug Interactions Radar Card
         if (cabinetInteractions.isNotEmpty()) {
             item {
+                val infiniteTransition = rememberInfiniteTransition(label = "cabinet_radar_pulse")
+                val pulseBorderAlpha by infiniteTransition.animateFloat(
+                    initialValue = 0.45f,
+                    targetValue = 1.0f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1200, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulse_alpha"
+                )
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("cabinet_interaction_radar"),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1219)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444))
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFEF4444).copy(alpha = pulseBorderAlpha))
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -477,7 +493,7 @@ fun MedicationsManagerScreen(
 
                         if (!med.activeIngredients.isNullOrEmpty() || !med.foodWarningsSummary.isNullOrEmpty()) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Divider(color = DarkCardBorder)
+                            HorizontalDivider(color = DarkCardBorder)
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = stringResource(R.string.fda_notes_format, med.activeIngredients ?: stringResource(R.string.rxnorm_verified)),
@@ -535,6 +551,19 @@ fun MedicationsManagerScreen(
         var currentUpc by remember { mutableStateOf(editingMed?.upcOrBarcode ?: selectedPillDetail?.upcOrNdc) }
         var currentActive by remember { mutableStateOf(editingMed?.activeIngredients ?: selectedPillDetail?.activeIngredients) }
         var currentVisual by remember { mutableStateOf(editingMed?.visualDescription ?: selectedPillDetail?.visualDescription) }
+
+        LaunchedEffect(selectedPillDetail) {
+            selectedPillDetail?.let { detail ->
+                if (editingMed == null) {
+                    name = detail.name
+                    detail.dosageGuidance?.take(20)?.let { dosage = it }
+                    currentRxcui = detail.rxcui
+                    currentUpc = detail.upcOrNdc
+                    currentActive = detail.activeIngredients
+                    currentVisual = detail.visualDescription
+                }
+            }
+        }
 
         var hasError by remember { mutableStateOf(false) }
 
@@ -639,7 +668,7 @@ fun MedicationsManagerScreen(
                                                 )
                                             }
                                         }
-                                        Divider(color = DarkCardBorder.copy(alpha = 0.5f))
+                                        HorizontalDivider(color = DarkCardBorder.copy(alpha = 0.5f))
                                     }
                                 }
                             }

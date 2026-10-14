@@ -259,7 +259,7 @@ fun PillSafetySheet(
 
                                     if (!pillDetail.activeIngredients.isNullOrEmpty()) {
                                         Spacer(modifier = Modifier.height(12.dp))
-                                        Divider(color = DarkCardBorder)
+                                        HorizontalDivider(color = DarkCardBorder)
                                         Spacer(modifier = Modifier.height(12.dp))
                                         Text(
                                             text = stringResource(R.string.active_ingredients_label, pillDetail.activeIngredients),

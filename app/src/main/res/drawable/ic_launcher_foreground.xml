@@ -4,60 +4,121 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    
-    <!-- Central Pill Container (Left side) -->
-    <!-- Pill Left Half (Radiant Violet) -->
-    <path
-        android:pathData="M34,42 C27.373,42 22,47.373 22,54 C22,60.627 27.373,66 34,66 L46,66 L46,42 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="22"
-                android:startY="42"
-                android:endX="46"
-                android:endY="66"
-                android:type="linear">
-                <item android:offset="0.0" android:color="#FFC084FC" />
-                <item android:offset="1.0" android:color="#FFA855F7" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <!-- Pill Right Half (Clean Slate White) -->
-    <path
-        android:pathData="M46,42 L58,42 C64.627,42 70,47.373 70,54 C70,60.627 64.627,66 58,66 L46,66 Z"
-        android:fillColor="#FFE2E8F0" />
-    
-    <!-- Pill Divider Line -->
-    <path
-        android:pathData="M46,42 L46,66"
-        android:strokeWidth="1.5"
-        android:strokeColor="#FF0F172A" />
 
-    <!-- Flow Droplet (Lower Right, overlapping gracefully) -->
+    <!-- Ambient Shadow for Capsule Pill & Droplet Fusion -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:rotation="-45"
+        android:translateX="1.5"
+        android:translateY="2.5">
+        <path
+            android:pathData="M42,43 C35.925,43 31,47.925 31,54 C31,60.075 35.925,65 42,65 L66,65 C72.075,65 77,60.075 77,54 C77,47.925 72.075,43 66,43 Z"
+            android:fillColor="#50000000" />
+    </group>
+
+    <!-- 45-Degree Angled Medical Capsule Pill -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:rotation="-45">
+
+        <!-- Active Half: Electric Violet & Amethyst Gradient -->
+        <path
+            android:pathData="M42,43 C35.925,43 31,47.925 31,54 C31,60.075 35.925,65 42,65 L54,65 L54,43 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:startX="31"
+                    android:startY="43"
+                    android:endX="54"
+                    android:endY="65"
+                    android:type="linear">
+                    <item android:offset="0.0" android:color="#FFC084FC" />
+                    <item android:offset="0.6" android:color="#FFA855F7" />
+                    <item android:offset="1.0" android:color="#FF7E22CE" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Base Half: Ceramic Pearl White with Soft Shadow Shading -->
+        <path
+            android:pathData="M54,43 L66,43 C72.075,43 77,47.925 77,54 C77,60.075 72.075,65 66,65 L54,65 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:startX="54"
+                    android:startY="43"
+                    android:endX="77"
+                    android:endY="65"
+                    android:type="linear">
+                    <item android:offset="0.0" android:color="#FFF8FAFC" />
+                    <item android:offset="0.75" android:color="#FFE2E8F0" />
+                    <item android:offset="1.0" android:color="#FFCBD5E1" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Pill Central Seam Divider Line -->
+        <path
+            android:pathData="M54,43 L54,65"
+            android:strokeWidth="1.5"
+            android:strokeColor="#FF0F172A" />
+
+        <!-- Specular Pill Surface Reflection -->
+        <path
+            android:pathData="M37,46 C34,48 33.5,51 33.5,52"
+            android:strokeWidth="1.5"
+            android:strokeColor="#FFFFFF"
+            android:strokeAlpha="0.7"
+            android:strokeLineCap="round" />
+    </group>
+
+    <!-- Droplet Drop-Shadow -->
     <path
-        android:pathData="M68,36 C68,36 50,56 50,66 C50,75.941 58.059,84 68,84 C77.941,84 86,75.941 86,66 C86,56 68,36 68,36 Z">
+        android:pathData="M63,39 C63,39 49,57 49,67 C49,75.837 55.268,82 63,82 C70.732,82 77,75.837 77,67 C77,57 63,39 63,39 Z"
+        android:fillColor="#45000000" />
+
+    <!-- Luminous Fluid Water Droplet (Hydration & Flow) -->
+    <path
+        android:pathData="M62,37 C62,37 48,55 48,65 C48,73.837 54.268,80 62,80 C69.732,80 76,73.837 76,65 C76,55 62,37 62,37 Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="50"
-                android:startY="36"
-                android:endX="86"
-                android:endY="84"
+                android:startX="48"
+                android:startY="37"
+                android:endX="76"
+                android:endY="80"
                 android:type="linear">
                 <item android:offset="0.0" android:color="#FF38BDF8" />
-                <item android:offset="1.0" android:color="#FF06B6D4" />
+                <item android:offset="0.5" android:color="#FF06B6D4" />
+                <item android:offset="1.0" android:color="#FF0284C7" />
             </gradient>
         </aapt:attr>
     </path>
 
-    <!-- Droplet Gloss Accent -->
+    <!-- Water Droplet Specular Reflection Curve -->
     <path
-        android:pathData="M62,64 C62,59 66,51 66,51 C66,51 68,55 68,59 C68,63 65.5,65 63,65 C62.5,65 62,64.5 62,64 Z"
+        android:pathData="M56,61 C56,57 59.5,50 60.5,48 C60.5,48 61.5,52 61.5,56 C61.5,60 59.5,62 58,62 C57.2,62 56,61.6 56,61 Z"
         android:fillColor="#FFFFFFFF"
-        android:fillAlpha="0.75" />
+        android:fillAlpha="0.78" />
 
-    <!-- Dynamic Pulse Sparkle / Check Mark Sparkle -->
+    <!-- Secondary Micro Droplet Glint -->
     <path
-        android:pathData="M35,32 L36.5,35.5 L40,37 L36.5,38.5 L35,42 L33.5,38.5 L30,37 L33.5,35.5 Z"
+        android:pathData="M68,69 C68,68 69,67 70,67 C70.5,67 71,67.5 71,68 C71,69 70,70 69,70 C68.5,70 68,69.5 68,69 Z"
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="0.8" />
+
+    <!-- Vitality Energy Sparkle (Emerald Glow at Upper-Left) -->
+    <path
+        android:pathData="M37,27 L38.5,30.5 L42,32 L38.5,33.5 L37,37 L35.5,33.5 L32,32 L35.5,30.5 Z"
         android:fillColor="#FF34D399" />
+
+    <path
+        android:pathData="M37,29.5 L37.8,31.2 L39.5,32 L37.8,32.8 L37,34.5 L36.2,32.8 L34.5,32 L36.2,31.2 Z"
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="0.9" />
+
+    <!-- Subtle Secondary Micro-Sparkle (Cyan at Upper-Right) -->
+    <path
+        android:pathData="M78,38 L79,40 L81,41 L79,42 L78,44 L77,42 L75,41 L77,40 Z"
+        android:fillColor="#FF38BDF8"
+        android:fillAlpha="0.85" />
 </vector>
-
-
