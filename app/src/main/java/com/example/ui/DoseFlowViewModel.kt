@@ -42,10 +42,6 @@ class DoseFlowViewModel(application: Application) : AndroidViewModel(application
     init {
         val dao = AppDatabase.getDatabase(context).doseFlowDao()
         repository = DoseFlowRepository(dao, context)
-
-        viewModelScope.launch {
-            repository.seedSampleDataIfEmpty()
-        }
     }
 
     val medications: StateFlow<List<MedicationEntity>> = repository.allMedications

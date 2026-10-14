@@ -24,12 +24,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Watch
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -321,7 +325,7 @@ fun GeometricBottomNavigation(
             .background(OledBlack)
             .border(androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder))
             .navigationBarsPadding()
-            .padding(vertical = 12.dp, horizontal = 16.dp)
+            .padding(vertical = 8.dp, horizontal = 8.dp)
             .testTag("geometric_bottom_navigation")
     ) {
         Row(
@@ -331,8 +335,8 @@ fun GeometricBottomNavigation(
         ) {
             // Tab 0: Flow (Today Dashboard)
             NavItem(
-                iconText = "D",
-                label = "Flow",
+                icon = Icons.Default.WaterDrop,
+                label = stringResource(R.string.nav_flow),
                 isSelected = selectedTab == 0,
                 activeColor = SuccessEmerald,
                 onClick = { onTabSelected(0) },
@@ -341,8 +345,8 @@ fun GeometricBottomNavigation(
 
             // Tab 1: Schedules (Medications)
             NavItem(
-                iconText = "S",
-                label = "Schedules",
+                icon = Icons.Default.Medication,
+                label = stringResource(R.string.nav_schedules),
                 isSelected = selectedTab == 1,
                 activeColor = PillViolet,
                 onClick = { onTabSelected(1) },
@@ -351,8 +355,8 @@ fun GeometricBottomNavigation(
 
             // Tab 2: Report
             NavItem(
-                iconText = "R",
-                label = "Report",
+                icon = Icons.Default.BarChart,
+                label = stringResource(R.string.nav_report),
                 isSelected = selectedTab == 2,
                 activeColor = HydrationCyan,
                 onClick = { onTabSelected(2) },
@@ -361,8 +365,8 @@ fun GeometricBottomNavigation(
 
             // Tab 3: History & Export
             NavItem(
-                iconText = "H",
-                label = "History",
+                icon = Icons.Default.History,
+                label = stringResource(R.string.nav_history),
                 isSelected = selectedTab == 3,
                 activeColor = SuccessEmerald,
                 onClick = { onTabSelected(3) },
@@ -371,8 +375,8 @@ fun GeometricBottomNavigation(
 
             // Tab 4: Settings
             NavItem(
-                iconText = "G",
-                label = "Settings",
+                icon = Icons.Default.Settings,
+                label = stringResource(R.string.nav_settings),
                 isSelected = selectedTab == 4,
                 activeColor = WarningAmber,
                 onClick = { onTabSelected(4) },
@@ -384,7 +388,7 @@ fun GeometricBottomNavigation(
 
 @Composable
 fun NavItem(
-    iconText: String,
+    icon: ImageVector,
     label: String,
     isSelected: Boolean,
     activeColor: Color,
@@ -392,36 +396,29 @@ fun NavItem(
     testTag: String
 ) {
     val color = if (isSelected) activeColor else TextMuted
+    val containerBg = if (isSelected) activeColor.copy(alpha = 0.15f) else Color.Transparent
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
+            .background(containerBg)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
             .testTag(testTag)
     ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(2.dp, color, RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = iconText,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Black,
-                fontStyle = FontStyle.Italic,
-                color = color
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = color,
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label.uppercase(),
             fontSize = 9.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.2.sp,
+            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+            letterSpacing = 1.sp,
             color = color
         )
     }

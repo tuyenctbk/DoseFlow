@@ -278,9 +278,23 @@ fun TodayDashboardScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = TextSecondary
                                 )
+                            } else if (activeMeds.isEmpty()) {
+                                Text(
+                                    text = "No Medications Added",
+                                    style = MaterialTheme.typography.headlineMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontStyle = FontStyle.Italic
+                                    ),
+                                    color = PillViolet
+                                )
+                                Text(
+                                    text = "Set up your medication schedule to receive smart reminders",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary
+                                )
                             } else {
                                 Text(
-                                    text = "All Clear!",
+                                    text = "All Caught Up! 🎉",
                                     style = MaterialTheme.typography.headlineMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontStyle = FontStyle.Italic
@@ -288,7 +302,7 @@ fun TodayDashboardScreen(
                                     color = SuccessEmerald
                                 )
                                 Text(
-                                    text = "No pending dosages scheduled for today",
+                                    text = "You have taken all scheduled doses for today",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = TextSecondary
                                 )
@@ -313,9 +327,33 @@ fun TodayDashboardScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    if (nextMedication != null) {
+                    if (activeMeds.isEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onOpenAddMedication()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .testTag("hero_add_first_med_btn"),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PillViolet,
+                                contentColor = OledBlack
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Add First Medication", fontWeight = FontWeight.Bold)
+                        }
+                    } else if (nextMedication != null) {
+                        Spacer(modifier = Modifier.height(20.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(bottom = 12.dp)
@@ -511,12 +549,67 @@ fun TodayDashboardScreen(
 
         if (medications.isEmpty()) {
             item {
-                Text(
-                    text = "No medications scheduled yet. Tap + above to add your pills or supplements.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextMuted,
-                    modifier = Modifier.padding(vertical = 12.dp)
-                )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("empty_today_doses_card"),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkCard),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(PillViolet.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Medication,
+                                    contentDescription = null,
+                                    tint = PillViolet,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "No Doses Scheduled",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = "Tap + to add your first dose schedule",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onOpenAddMedication()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PillViolet,
+                                contentColor = OledBlack
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.testTag("add_schedule_btn")
+                        ) {
+                            Text("+ Add", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+                }
             }
         } else {
             items(medications) { med ->

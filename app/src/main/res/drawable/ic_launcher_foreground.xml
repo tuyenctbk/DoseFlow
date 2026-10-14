@@ -1,28 +1,63 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Center backing card shape -->
-    <path
-        android:fillColor="#1E293B"
-        android:pathData="M54,20 C74.434,20 91,36.566 91,57 C91,77.434 74.434,94 54,94 C33.566,94 17,77.434 17,57 C17,36.566 33.566,20 54,20 Z" />
     
-    <!-- Pill Icon Left (Vibrant Violet Gradient effect) -->
+    <!-- Central Pill Container (Left side) -->
+    <!-- Pill Left Half (Radiant Violet) -->
     <path
-        android:fillColor="#A855F7"
-        android:pathData="M34,36 C28,36 24,41 24,48 C24,55 28,60 34,60 L52,60 C58,60 62,55 62,48 C62,41 58,36 52,36 Z" />
+        android:pathData="M34,42 C27.373,42 22,47.373 22,54 C22,60.627 27.373,66 34,66 L46,66 L46,42 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="22"
+                android:startY="42"
+                android:endX="46"
+                android:endY="66"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFC084FC" />
+                <item android:offset="1.0" android:color="#FFA855F7" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Pill Right Half (Clean Slate White) -->
     <path
-        android:fillColor="#C084FC"
-        android:pathData="M34,36 C28,36 24,41 24,48 C24,55 28,60 34,60 L43,60 L43,36 Z" />
+        android:pathData="M46,42 L58,42 C64.627,42 70,47.373 70,54 C70,60.627 64.627,66 58,66 L46,66 Z"
+        android:fillColor="#FFE2E8F0" />
+    
+    <!-- Pill Divider Line -->
+    <path
+        android:pathData="M46,42 L46,66"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FF0F172A" />
 
-    <!-- Water Drop Right/Bottom (Cyan) -->
+    <!-- Flow Droplet (Lower Right, overlapping gracefully) -->
     <path
-        android:fillColor="#06B6D4"
-        android:pathData="M68,48 C68,48 52,64 52,72 C52,81 59,88 68,88 C77,88 84,81 84,72 C84,64 68,48 68,48 Z" />
-    <!-- Water Drop Highlight -->
+        android:pathData="M68,36 C68,36 50,56 50,66 C50,75.941 58.059,84 68,84 C77.941,84 86,75.941 86,66 C86,56 68,36 68,36 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="50"
+                android:startY="36"
+                android:endX="86"
+                android:endY="84"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF38BDF8" />
+                <item android:offset="1.0" android:color="#FF06B6D4" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Droplet Gloss Accent -->
     <path
-        android:fillColor="#67E8F9"
-        android:pathData="M64,70 C64,66 68,58 68,58 C68,58 70,62 70,65 C70,68 68,70 65,70 C63,70 64,72 64,70 Z" />
+        android:pathData="M62,64 C62,59 66,51 66,51 C66,51 68,55 68,59 C68,63 65.5,65 63,65 C62.5,65 62,64.5 62,64 Z"
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="0.75" />
+
+    <!-- Dynamic Pulse Sparkle / Check Mark Sparkle -->
+    <path
+        android:pathData="M35,32 L36.5,35.5 L40,37 L36.5,38.5 L35,42 L33.5,38.5 L30,37 L33.5,35.5 Z"
+        android:fillColor="#FF34D399" />
 </vector>
+
 

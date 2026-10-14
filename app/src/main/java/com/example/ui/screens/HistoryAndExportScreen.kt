@@ -422,9 +422,10 @@ fun HistoryAndExportScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No logs recorded yet today.",
+                            text = "No health logs recorded yet. Start taking medications or logging water in Flow to build your timeline.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextMuted
+                            color = TextMuted,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 }

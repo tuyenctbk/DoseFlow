@@ -180,7 +180,7 @@ class DoseFlowNotificationReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val builder = NotificationCompat.Builder(context, ReminderScheduler.CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, ReminderScheduler.MEDICATION_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_popup_reminder)
             .setContentTitle("💊 Medication Reminder: $medicationName")
             .setContentText("Time to take $dosage. 1-tap confirmation from wrist or phone.")

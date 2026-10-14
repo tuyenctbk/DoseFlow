@@ -329,6 +329,7 @@ fun ReportScreen(
                     }
 
                     val insightText = when {
+                        allMedLogs.isEmpty() && allWaterLogs.isEmpty() -> "🌱 Welcome to your habit journey! Start logging your medications and hydration in the Flow tab to unlock personalized 7-day adherence trends and consistency analytics."
                         avgAdherence >= 80 -> "🌟 Excellent consistency! You've taken over 80% of your scheduled doses on time this week. Keep up the phenomenal routine."
                         avgAdherence >= 50 -> "👍 Good effort! You are maintaining moderate medication adherence. Setting more reminders can help you hit peak consistency."
                         else -> "⚠️ Room for improvement. Try enabling push reminders in settings to stay on top of your daily medications."

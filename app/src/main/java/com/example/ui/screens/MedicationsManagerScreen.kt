@@ -191,89 +191,161 @@ fun MedicationsManagerScreen(
             )
         }
 
-        items(medications) { med ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+        if (medications.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("empty_medications_card"),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkCard),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(PillViolet.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Medication,
-                                contentDescription = "Med",
+                                contentDescription = "No Medications",
                                 tint = PillViolet,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(32.dp)
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = med.name,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "${med.dosage} • Frequency: ${med.frequency}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TextSecondary
-                                )
-                            }
                         }
 
-                        Row {
-                            IconButton(onClick = { onTestNotification(med) }) {
-                                Icon(
-                                    imageVector = Icons.Default.NotificationsActive,
-                                    contentDescription = "Test Notification",
-                                    tint = PillViolet,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            IconButton(onClick = {
-                                editingMed = med
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "No Medication Schedules",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = TextPrimary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Add your daily pills, vitamins, or supplements to set alarms and track doses effortlessly.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                editingMed = null
                                 showAddDialog = true
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit",
-                                    tint = TextSecondary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            IconButton(onClick = { onDeleteMedication(med) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete",
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PillViolet,
+                                contentColor = OledBlack
+                            ),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.testTag("empty_add_med_btn")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Add Your First Medication", fontWeight = FontWeight.Bold)
                         }
                     }
+                }
+            }
+        } else {
+            items(medications) { med ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkCard),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DarkCardBorder)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Medication,
+                                    contentDescription = "Med",
+                                    tint = PillViolet,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = med.name,
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = "${med.dosage} • Frequency: ${med.frequency}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                            Row {
+                                IconButton(onClick = { onTestNotification(med) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.NotificationsActive,
+                                        contentDescription = "Test Notification",
+                                        tint = PillViolet,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                IconButton(onClick = {
+                                    editingMed = med
+                                    showAddDialog = true
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit",
+                                        tint = TextSecondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                IconButton(onClick = { onDeleteMedication(med) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Alarm: ${String.format("%02d:%02d", med.timeHour, med.timeMinute)}",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                            color = PillViolet
-                        )
-                        Text(
-                            text = "Remaining Stock: ${med.stockRemaining} doses",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (med.stockRemaining < 5) MaterialTheme.colorScheme.error else TextMuted
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Alarm: ${String.format("%02d:%02d", med.timeHour, med.timeMinute)}",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = PillViolet
+                            )
+                            Text(
+                                text = "Remaining Stock: ${med.stockRemaining} doses",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (med.stockRemaining < 5) MaterialTheme.colorScheme.error else TextMuted
+                            )
+                        }
                     }
                 }
             }
@@ -288,11 +360,13 @@ fun MedicationsManagerScreen(
     if (showAddDialog) {
         var name by remember { mutableStateOf(editingMed?.name ?: "") }
         var dosage by remember { mutableStateOf(editingMed?.dosage ?: "1 Pill") }
-        var hourStr by remember { mutableStateOf((editingMed?.timeHour ?: 9).toString()) }
+        var hourStr by remember { mutableStateOf((editingMed?.timeHour ?: 8).toString()) }
         var minStr by remember { mutableStateOf((editingMed?.timeMinute ?: 0).toString()) }
         var stockStr by remember { mutableStateOf((editingMed?.stockRemaining ?: 30).toString()) }
         var freq by remember { mutableStateOf(editingMed?.frequency ?: "DAILY") }
+        var selectedColor by remember { mutableStateOf(editingMed?.colorHex ?: "#8B5CF6") }
         var selectedIcon by remember { mutableStateOf(editingMed?.iconType ?: "pill") }
+        var hasError by remember { mutableStateOf(false) }
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
@@ -306,19 +380,34 @@ fun MedicationsManagerScreen(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Medication / Supplement Name") },
+                        onValueChange = {
+                            name = it
+                            if (it.isNotBlank()) hasError = false
+                        },
+                        isError = hasError,
+                        label = { Text("Medication / Supplement Name *") },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PillViolet,
-                            unfocusedBorderColor = DarkCardBorder
+                            unfocusedBorderColor = DarkCardBorder,
+                            errorBorderColor = MaterialTheme.colorScheme.error
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("med_name_input")
                     )
+                    if (hasError) {
+                        Text(
+                            text = "Please enter a medication or supplement name",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
                     OutlinedTextField(
                         value = dosage,
@@ -332,6 +421,32 @@ fun MedicationsManagerScreen(
                             .fillMaxWidth()
                             .testTag("med_dosage_input")
                     )
+
+                    // Quick dosage preset chips
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf("1 Pill", "1 Cap", "2 Tabs", "5 ml").forEach { preset ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (dosage == preset) PillViolet.copy(alpha = 0.25f) else DarkSurface)
+                                    .border(1.dp, if (dosage == preset) PillViolet else DarkCardBorder, RoundedCornerShape(8.dp))
+                                    .clickable { dosage = preset }
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = preset,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (dosage == preset) PillViolet else TextSecondary
+                                )
+                            }
+                        }
+                    }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
@@ -362,6 +477,40 @@ fun MedicationsManagerScreen(
                         )
                     }
 
+                    // Quick time presets
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        listOf(
+                            "08:00" to (8 to 0),
+                            "12:30" to (12 to 30),
+                            "18:00" to (18 to 0),
+                            "21:00" to (21 to 0)
+                        ).forEach { (label, time) ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(DarkSurface)
+                                    .border(1.dp, DarkCardBorder, RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        hourStr = time.first.toString()
+                                        minStr = time.second.toString()
+                                    }
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = HydrationCyan
+                                )
+                            }
+                        }
+                    }
+
                     OutlinedTextField(
                         value = stockStr,
                         onValueChange = { stockStr = it },
@@ -376,31 +525,59 @@ fun MedicationsManagerScreen(
                             .testTag("med_stock_input")
                     )
 
-                    Text("Icon Type", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                    Text("Frequency", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        val iconTypes = listOf("pill", "capsule", "syrup", "injection")
-                        iconTypes.forEach { type ->
-                            val isSelected = selectedIcon == type
+                        listOf("DAILY", "TWICE DAILY", "WEEKLY", "AS NEEDED").forEach { f ->
+                            val isSelected = freq == f
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(if (isSelected) PillViolet else DarkSurface)
                                     .border(1.dp, if (isSelected) PillViolet else DarkCardBorder, RoundedCornerShape(8.dp))
-                                    .clickable { selectedIcon = type }
-                                    .padding(vertical = 8.dp),
+                                    .clickable { freq = f }
+                                    .padding(vertical = 6.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = type.replaceFirstChar { it.uppercase() },
+                                    text = when(f) {
+                                        "TWICE DAILY" -> "2x/Day"
+                                        "AS NEEDED" -> "PRN"
+                                        else -> f.lowercase().replaceFirstChar { it.uppercase() }
+                                    },
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (isSelected) OledBlack else TextPrimary,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp
                                 )
                             }
+                        }
+                    }
+
+                    Text("Color Theme", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val colors = listOf("#8B5CF6", "#06B6D4", "#10B981", "#F59E0B", "#F43F5E", "#3B82F6")
+                        colors.forEach { hex ->
+                            val isSelected = selectedColor.equals(hex, ignoreCase = true)
+                            val parsedColor = try {
+                                Color(android.graphics.Color.parseColor(hex))
+                            } catch (e: Exception) {
+                                PillViolet
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(parsedColor)
+                                    .border(if (isSelected) 3.dp else 1.dp, if (isSelected) Color.White else DarkCardBorder, CircleShape)
+                                    .clickable { selectedColor = hex }
+                            )
                         }
                     }
                 }
@@ -408,7 +585,7 @@ fun MedicationsManagerScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val h = hourStr.toIntOrNull()?.coerceIn(0, 23) ?: 9
+                        val h = hourStr.toIntOrNull()?.coerceIn(0, 23) ?: 8
                         val m = minStr.toIntOrNull()?.coerceIn(0, 59) ?: 0
                         val s = stockStr.toIntOrNull()?.coerceAtLeast(0) ?: 30
 
@@ -421,10 +598,12 @@ fun MedicationsManagerScreen(
                                 m,
                                 freq,
                                 s,
-                                "#8B5CF6",
+                                selectedColor,
                                 selectedIcon
                             )
                             showAddDialog = false
+                        } else {
+                            hasError = true
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PillViolet, contentColor = OledBlack),
